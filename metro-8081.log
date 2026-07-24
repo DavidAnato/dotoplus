@@ -1,5 +1,0 @@
-env: load .env
-env: export EXPO_PUBLIC_API_URL
-Starting project at C:\Users\David Anato\Documents\Work offline\DOTO+\dotoplus
-Starting Metro Bundler
-
