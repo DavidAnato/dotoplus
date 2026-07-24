@@ -1,0 +1,16 @@
+Failed to construct transformer:  Error: Failed to start watch mode.
+    at Timeout._onTimeout (C:\Users\David Anato\Documents\Work offline\DOTO+\dotoplus\node_modules\@expo\metro-file-map\build\Watcher.js:163:63)
+    at listOnTimeout (node:internal/timers:605:17)
+    at process.processTimers (node:internal/timers:541:7)
+Error: listen EADDRINUSE: address already in use :::8081
+Error: listen EADDRINUSE: address already in use :::8081
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at C:\Users\David Anato\Documents\Work offline\DOTO+\dotoplus\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\runServer-fork.js:144:20
+    at new Promise (<anonymous>)
+    at runServer (C:\Users\David Anato\Documents\Work offline\DOTO+\dotoplus\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\runServer-fork.js:140:12)
+    at async replaceMetroFileMap (C:\Users\David Anato\Documents\Work offline\DOTO+\dotoplus\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\createFileMap-fork.js:191:20)
+    at async instantiateMetroAsync (C:\Users\David Anato\Documents\Work offline\DOTO+\dotoplus\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\instantiateMetro.js:401:51)
+    at async MetroBundlerDevServer.startImplementationAsync (C:\Users\David Anato\Documents\Work offline\DOTO+\dotoplus\node_modules\expo\node_modules\@expo\cli\build\src\start\server\metro\MetroBundlerDevServer.js:929:82)
+    at async MetroBundlerDevServer.startAsync (C:\Users\David Anato\Documents\Work offline\DOTO+\dotoplus\node_modules\expo\node_modules\@expo\cli\build\src\start\server\BundlerDevServer.js:124:24)

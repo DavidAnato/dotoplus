@@ -1,0 +1,68 @@
+{
+  "expo": {
+    "name": "DOTO+ Patient",
+    "slug": "dotoplus",
+    "scheme": "dotoplus",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1E3755"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Déverrouillage biométrique de DOTO+",
+        "NSCameraUsageDescription": "Scan éventuel de codes DodoCard"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1E3755",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "CAMERA",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ],
+      "usesCleartextTraffic": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#1E3755",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain"
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Autoriser DOTO+ à utiliser Face ID pour le déverrouillage."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Autoriser DOTO+ à utiliser la caméra."
+        }
+      ],
+      "expo-sharing",
+      "@react-native-community/datetimepicker",
+      "expo-audio"
+    ]
+  }
+}
