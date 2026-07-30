@@ -5,7 +5,7 @@ import { Button } from "../ui";
 import { C, Profile, brandNavy, darkC } from "../theme";
 import { getFirstCardChecks, isReadyForFirstCard } from "../profileReady";
 
-/** Checklist UX avant la première émission de DodoCard. */
+/** Checklist UX avant la première émission de DotoCard. */
 export function FirstCardGate({
   user,
   dark,
@@ -63,7 +63,7 @@ export function FirstCardGate({
         </View>
         <View style={{ flex: 1 }}>
           <Text style={{ color: colors.text, fontWeight: "800", fontSize: 17 }}>
-            Première DodoCard
+            Première DotoCard
           </Text>
           <Text style={{ color: colors.muted, fontSize: 13, marginTop: 2, lineHeight: 18 }}>
             Quelques infos essentielles suffisent. Le reste (sang, allergies…) reste optionnel.
@@ -145,7 +145,7 @@ export function FirstCardGate({
 
       {ready ? (
         <Button
-          title="Générer ma DodoCard"
+          title="Générer ma DotoCard"
           icon="sparkles-outline"
           color={dark ? C.blue : brandNavy}
           onPress={onIssue}

@@ -191,7 +191,7 @@ function CardBack({ user, expiry }: Props) {
 /**
  * Flip 3D simple v1 : gauche / droite uniquement, sans épaisseur.
  */
-export function DodoCard3D(props: Props) {
+export function DotoCard3D(props: Props) {
   const flip = useSharedValue(0);
   const [showBack, setShowBack] = useState(false);
 

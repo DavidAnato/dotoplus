@@ -16,7 +16,7 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSFaceIDUsageDescription": "Déverrouillage biométrique de DOTO+",
-        "NSCameraUsageDescription": "Scan éventuel de codes DodoCard"
+        "NSCameraUsageDescription": "Scan éventuel de codes DotoCard"
       }
     },
     "android": {

@@ -5,7 +5,7 @@ Application mobile **patient** de l'écosystème **DOTO+**, construite avec
 
 ## Écrans (fidèles au Figma)
 Onboarding (3 slides) · Connexion · Accueil · Mon dossier (Dossier / Ordonnances /
-Examens / Assurance) · Ma carte (**DodoCard** + QR) · Paramètres · **Mode Urgence**
+Examens / Assurance) · Ma carte (**DotoCard** + QR) · Paramètres · **Mode Urgence**
 (fond rouge, accessible hors ligne).
 
 ## Stack
@@ -22,7 +22,7 @@ npm start                   # puis 'a' (Android), 'i' (iOS) ou 'w' (web)
 ```
 
 ## Nouveautés (suite gaps)
-- **DodoCard** : QR réel via `GET /api/dodocards/mine/` + `react-native-qrcode-svg` (token chiffré backend).
+- **DotoCard** : QR réel via `GET /api/dodocards/mine/` + `react-native-qrcode-svg` (token chiffré backend).
 - **Hors ligne** : snapshot AsyncStorage (profil urgence + token QR) ; SecureStore pour JWT / flags bio.
 - **Connexion** : téléphone + mot de passe uniquement. OTP pour inscription / reset MDP.
 - **NPI / ANIP** : identification du dossier côté Hub/pro (pas pour login patient).

@@ -21,7 +21,7 @@ import { wipeClientCaches } from "./src/session";
 import { persistOptions, queryClient } from "./src/queries/queryClient";
 import { pingOnline, useAppStore } from "./src/store/appStore";
 import { usePatientSSE, registerPushToken } from "./src/notifications";
-import { useUnreadCount } from "./src/queries/hooks";
+import { useUnreadCount, useDossierBadgesFromNotifications } from "./src/queries/hooks";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { PinLockScreen } from "./src/components/PinInput";
 import Urgence from "./src/screens/Urgence";
@@ -99,6 +99,7 @@ function AppInner() {
   const backgroundAt = useRef<number | null>(null);
 
   usePatientSSE(phase === "main" && !locked);
+  useDossierBadgesFromNotifications(phase === "main" && !locked);
   const unreadQ = useUnreadCount(phase === "main" && !locked);
   useEffect(() => {
     if (typeof unreadQ.data === "number") setUnread(unreadQ.data);
@@ -110,9 +111,8 @@ function AppInner() {
     }
   }, [phase, pushEnabled]);
 
-  const tryBiometricUnlock = useCallback(async (): Promise<boolean> => {
-    const enabled = await storage.isBioEnabled();
-    if (!enabled) return false;
+  /** Prompt biométrie (empreinte / Face ID). `requireEnabled` = auto-unlock au retour. */
+  const promptBiometric = useCallback(async (): Promise<boolean> => {
     const hw = await LocalAuthentication.hasHardwareAsync();
     const enrolled = hw && (await LocalAuthentication.isEnrolledAsync());
     if (!enrolled) return false;
@@ -123,6 +123,11 @@ function AppInner() {
     });
     return !!res.success;
   }, []);
+
+  const tryBiometricUnlock = useCallback(async (): Promise<boolean> => {
+    if (!(await storage.isBioEnabled())) return false;
+    return promptBiometric();
+  }, [promptBiometric]);
 
   const shouldLock = useCallback(async (profile: { requireUnlock?: boolean; hasPin?: boolean }) => {
     if (!profile.requireUnlock) return false;
@@ -252,7 +257,10 @@ function AppInner() {
 
   const unlockWithBio = async () => {
     if (pinBusyRef.current) return;
-    if (await tryBiometricUnlock()) {
+    // Bouton manuel : toujours proposer la bio (même si pas encore activée dans Réglages)
+    const ok = await promptBiometric();
+    if (ok) {
+      await storage.setBioEnabled(true);
       setLocked(false);
       setPinError("");
     }

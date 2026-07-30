@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import { storage } from "../storage";
@@ -36,7 +37,7 @@ export function useMyCard(enabled = true) {
             offline: true as const,
           };
         }
-        throw new Error("Impossible de charger la DodoCard");
+        throw new Error("Impossible de charger la DotoCard");
       }
     },
   });
@@ -225,6 +226,81 @@ export function useAppointments(enabled = true) {
     enabled,
     queryFn: () => api.appointments(),
   });
+}
+
+export function useHistorique(enabled = true) {
+  return useQuery({
+    queryKey: qk.historique,
+    enabled,
+    queryFn: () =>
+      api.historique().catch(() => ({
+        consultations: [] as any[],
+        ordonnances: [] as any[],
+        examens: [] as any[],
+      })),
+    staleTime: 30_000,
+  });
+}
+
+export function useMyAssurance(enabled = true) {
+  return useQuery({
+    queryKey: qk.assurance,
+    enabled,
+    queryFn: () => api.myAssurance().catch(() => null),
+    staleTime: 60_000,
+  });
+}
+
+/**
+ * Badges Mon dossier depuis le poll notifications (chemin principal RN sans EventSource).
+ * Ignore le premier snapshot pour ne pas badge-ifier l'historique déjà présent.
+ */
+export function useDossierBadgesFromNotifications(enabled = true) {
+  const qc = useQueryClient();
+  const notifs = useNotifications(enabled);
+  const primed = useRef(false);
+  const seen = useRef<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (!enabled) return;
+    const list: any[] = Array.isArray(notifs.data)
+      ? notifs.data
+      : Array.isArray((notifs.data as any)?.results)
+        ? (notifs.data as any).results
+        : [];
+
+    if (!primed.current) {
+      for (const n of list) {
+        if (n?.id != null) seen.current.add(n.id);
+      }
+      primed.current = true;
+      return;
+    }
+
+    for (const n of list) {
+      if (n?.id == null || seen.current.has(n.id)) continue;
+      seen.current.add(n.id);
+      if (n.read_at) continue;
+      const section = n.payload?.section as string | undefined;
+      const type = n.type as string | undefined;
+      if (section === "ordonnances" || type === "ordonnance") {
+        useAppStore.getState().bumpDossierBadge("ordonnances");
+        void qc.invalidateQueries({ queryKey: qk.historique });
+      } else if (section === "examens" || type === "examen") {
+        useAppStore.getState().bumpDossierBadge("examens");
+        void qc.invalidateQueries({ queryKey: qk.historique });
+      } else if (section === "assurance") {
+        useAppStore.getState().bumpDossierBadge("assurance");
+        void qc.invalidateQueries({ queryKey: qk.assurance });
+      } else if (section === "dossier" || type === "dossier_updated") {
+        useAppStore.getState().bumpDossierBadge("dossier");
+        void qc.invalidateQueries({ queryKey: qk.historique });
+        void qc.invalidateQueries({ queryKey: qk.me });
+      } else if (section === "rdv" || String(n.payload?.kind || "").startsWith("rdv")) {
+        void qc.invalidateQueries({ queryKey: qk.appointments });
+      }
+    }
+  }, [enabled, notifs.data, qc]);
 }
 
 export function useLoginMutation() {

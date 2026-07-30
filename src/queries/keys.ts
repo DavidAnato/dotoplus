@@ -8,4 +8,6 @@ export const qk = {
   accessPending: ["patient", "access-requests", "pending"] as const,
   accessActive: ["patient", "access-requests", "active"] as const,
   appointments: ["patient", "appointments"] as const,
+  historique: ["patient", "historique"] as const,
+  assurance: ["patient", "assurance"] as const,
 };

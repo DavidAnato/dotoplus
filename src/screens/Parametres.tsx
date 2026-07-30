@@ -894,7 +894,7 @@ export default function Parametres({
         >
           <Text style={{ color: colors.text, fontWeight: "800", fontSize: 16 }}>Doto+</Text>
           <Text style={{ color: colors.muted, lineHeight: 20, marginTop: 8 }}>
-            Application patient de la plateforme DOTO+. Votre dossier, votre DodoCard et vos
+            Application patient de la plateforme DOTO+. Votre dossier, votre DotoCard et vos
             consentements d&apos;accès.
           </Text>
           <Text
@@ -910,7 +910,7 @@ export default function Parametres({
             HORS LIGNE
           </Text>
           <Text style={{ color: colors.text, fontSize: 13, lineHeight: 19 }}>
-            Le mode urgence et la DodoCard utilisent le dernier snapshot synchronisé (profil,
+            Le mode urgence et la DotoCard utilisent le dernier snapshot synchronisé (profil,
             allergies, contact, token QR). Les consentements d&apos;accès nécessitent une connexion.
           </Text>
           <Text style={{ color: colors.muted, fontSize: 12, marginTop: 14 }}>Version 1.0</Text>

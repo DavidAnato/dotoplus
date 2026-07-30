@@ -2,7 +2,7 @@
  * Persistance hors ligne DotoPlus (patient uniquement).
  *
  * - SecureStore : token JWT, préférences bio
- * - AsyncStorage : snapshot urgence / profil / token DodoCard (mode dégradé)
+ * - AsyncStorage : snapshot urgence / profil / token DotoCard (mode dégradé)
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";

@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { Card, Header, Pill, SectionLabel } from "../ui";
 import { C, Profile, darkC } from "../theme";
-import { api } from "../api";
 import {
   BrandBackground,
   EmptyState,
@@ -15,8 +14,10 @@ import { CriticalMedicalCard } from "../components/CriticalMedical";
 import { StoryArt } from "../components/StoryArt";
 import { usePullRefresh } from "../hooks/usePullRefresh";
 import { qk } from "../queries/keys";
+import { useHistorique, useMyAssurance } from "../queries/hooks";
+import { useAppStore, type DossierSub } from "../store/appStore";
 
-type Sub = "dossier" | "ordonnances" | "examens" | "assurance";
+type Sub = DossierSub;
 
 const SUBS: { key: Sub; label: string }[] = [
   { key: "dossier", label: "Dossier" },
@@ -25,38 +26,57 @@ const SUBS: { key: Sub; label: string }[] = [
   { key: "assurance", label: "Assurance" },
 ];
 
+function TabBadge({ count, active }: { count: number; active: boolean }) {
+  if (count <= 0) return null;
+  return (
+    <View
+      style={{
+        marginLeft: 6,
+        minWidth: 16,
+        height: 16,
+        borderRadius: 8,
+        paddingHorizontal: 4,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: active ? C.emergency : "#fff",
+      }}
+    >
+      <Text
+        style={{
+          color: active ? "#fff" : C.navy,
+          fontSize: 9,
+          fontWeight: "800",
+        }}
+      >
+        {count > 9 ? "9+" : count}
+      </Text>
+    </View>
+  );
+}
+
 export default function Dossier({ user, dark = false }: { user: Profile; dark?: boolean }) {
   const colors = dark ? darkC : C;
   const [sub, setSub] = useState<Sub>("dossier");
-  const [hist, setHist] = useState<{
-    consultations: any[];
-    ordonnances: any[];
-    examens: any[];
-  } | null>(null);
-  const [assurance, setAssurance] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dossierBadges = useAppStore((s) => s.dossierBadges);
+  const clearDossierBadge = useAppStore((s) => s.clearDossierBadge);
+  const histQ = useHistorique(true);
+  const assuranceQ = useMyAssurance(true);
 
-  const load = useCallback(async (opts?: { silent?: boolean }) => {
-    if (!opts?.silent) setLoading(true);
-    try {
-      const [h, a] = await Promise.all([
-        api.historique().catch(() => ({ consultations: [], ordonnances: [], examens: [] })),
-        api.myAssurance().catch(() => null),
-      ]);
-      setHist(h);
-      setAssurance(a);
-    } finally {
-      if (!opts?.silent) setLoading(false);
-    }
-  }, []);
+  const hist = histQ.data ?? null;
+  const assurance = assuranceQ.data ?? null;
+  const loading = histQ.isLoading && !histQ.data;
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    clearDossierBadge(sub);
+  }, [sub, clearDossierBadge]);
+
+  const selectSub = (key: Sub) => {
+    setSub(key);
+    clearDossierBadge(key);
+  };
 
   const { refreshControl } = usePullRefresh({
-    keys: [qk.me],
-    refetch: [() => load({ silent: true })],
+    keys: [qk.me, qk.historique, qk.assurance],
   });
 
   return (
@@ -77,10 +97,11 @@ export default function Dossier({ user, dark = false }: { user: Profile; dark?: 
           >
             {SUBS.map((t) => {
               const active = sub === t.key;
+              const badge = dossierBadges[t.key] || 0;
               return (
                 <PressScale
                   key={t.key}
-                  onPress={() => setSub(t.key)}
+                  onPress={() => selectSub(t.key)}
                   style={{
                     height: 36,
                     paddingHorizontal: 14,
@@ -89,6 +110,8 @@ export default function Dossier({ user, dark = false }: { user: Profile; dark?: 
                     borderTopRightRadius: 12,
                     backgroundColor: active ? colors.bg : "transparent",
                     alignSelf: "center",
+                    flexDirection: "row",
+                    alignItems: "center",
                   }}
                 >
                   <Text
@@ -100,6 +123,7 @@ export default function Dossier({ user, dark = false }: { user: Profile; dark?: 
                   >
                     {t.label}
                   </Text>
+                  <TabBadge count={badge} active={active} />
                 </PressScale>
               );
             })}

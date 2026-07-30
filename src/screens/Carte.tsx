@@ -27,7 +27,7 @@ import {
   StaggerItem,
 } from "../motion";
 import { StoryArt } from "../components/StoryArt";
-import { DodoCard3D } from "../components/DodoCard3D";
+import { DotoCard3D } from "../components/DotoCard3D";
 import { PdfViewerModal } from "../components/PdfViewerModal";
 import { SheetModal } from "../components/SheetModal";
 import { FirstCardGate } from "../components/FirstCardGate";
@@ -133,7 +133,7 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
   const confirmLoss = () => {
     appAlert(
       "Signaler la perte",
-      "L'ancienne carte sera invalidée immédiatement et une nouvelle DodoCard sera émise. Continuer ?",
+      "L'ancienne carte sera invalidée immédiatement et une nouvelle DotoCard sera émise. Continuer ?",
       [
         { text: "Annuler", style: "cancel" },
         {
@@ -144,7 +144,7 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
               onSuccess: () => {
                 appAlert(
                   "Carte renouvelée",
-                  "Perte enregistrée. Votre nouvelle DodoCard est active."
+                  "Perte enregistrée. Votre nouvelle DotoCard est active."
                 );
               },
               onError: (e) => appAlert("Erreur", (e as Error).message),
@@ -172,7 +172,7 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
     }
     const isFirst = !token;
     appAlert(
-      isFirst ? "Générer ma DodoCard" : "Demander une nouvelle carte",
+      isFirst ? "Générer ma DotoCard" : "Demander une nouvelle carte",
       isFirst
         ? "Votre QR personnel sera créé. Vous pourrez compléter sang, allergies et adresse plus tard."
         : "Le QR actuel sera invalidé et remplacé. Les scans précédents ne fonctionneront plus.",
@@ -184,10 +184,10 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
             reissue.mutate("demande_remplacement", {
               onSuccess: () => {
                 appAlert(
-                  isFirst ? "DodoCard prête" : "Nouvelle carte",
+                  isFirst ? "DotoCard prête" : "Nouvelle carte",
                   isFirst
-                    ? "Votre DodoCard est active. Présentez le QR au professionnel."
-                    : "Votre DodoCard a été réémise avec succès."
+                    ? "Votre DotoCard est active. Présentez le QR au professionnel."
+                    : "Votre DotoCard a été réémise avec succès."
                 );
               },
               onError: (e) => appAlert("Erreur", (e as Error).message),
@@ -234,11 +234,11 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
       if (canShare) {
         await Sharing.shareAsync(uri, {
           mimeType: "application/pdf",
-          dialogTitle: "Partager DodoCard PDF",
+          dialogTitle: "Partager DotoCard PDF",
           UTI: "com.adobe.pdf",
         });
       } else {
-        await Share.share({ url: uri, message: "DodoCard DOTO+" });
+        await Share.share({ url: uri, message: "DotoCard DOTO+" });
       }
     } catch (e) {
       appAlert("Partage", (e as Error).message || "Partage impossible.");
@@ -260,7 +260,7 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
               preset="carte"
               compact
               dark={dark}
-              title="Ma DodoCard"
+              title="Ma DotoCard"
               subtitle="Présentez le QR au professionnel — identité et NPI vérifiés en un scan."
             />
           </StaggerItem>
@@ -421,7 +421,7 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
           {!token && !showSkeleton && isReadyForFirstCard(user) ? (
             <StaggerItem index={2} style={{ width: "100%" }}>
               <Button
-                title="Émettre ma DodoCard"
+                title="Émettre ma DotoCard"
                 icon="card-outline"
                 onPress={confirmReissue}
                 color={brandNavy}
@@ -445,14 +445,14 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
         handleColor={colors.border}
       >
         <Text style={{ fontWeight: "800", fontSize: 18, color: colors.text, marginBottom: 4 }}>
-          Aperçu DodoCard
+          Aperçu DotoCard
         </Text>
         <Text style={{ color: colors.muted, fontSize: 13, marginBottom: 16 }}>
           Aperçu 3D simple — glissez depuis n'importe quel côté pour retourner.
         </Text>
 
         <ScrollView contentContainerStyle={{ alignItems: "center", paddingBottom: 8 }}>
-          <DodoCard3D user={user} token={token} cardId={card?.id} expiry={expiry} />
+          <DotoCard3D user={user} token={token} cardId={card?.id} expiry={expiry} />
         </ScrollView>
 
         <View style={{ gap: 10, marginTop: 8 }}>

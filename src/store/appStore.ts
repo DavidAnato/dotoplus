@@ -5,6 +5,19 @@ import { storage } from "../storage";
 
 export type AppPhase = "boot" | "onboarding" | "login" | "main" | "urgence";
 export type Tab = "home" | "dossier" | "carte" | "parametres" | "notifications";
+export type DossierSub = "dossier" | "ordonnances" | "examens" | "assurance";
+
+export type DossierBadges = Record<DossierSub, number>;
+
+const EMPTY_DOSSIER_BADGES: DossierBadges = {
+  dossier: 0,
+  ordonnances: 0,
+  examens: 0,
+  assurance: 0,
+};
+
+const BADGE_DEDUP_MS = 2_500;
+const lastBadgeBumpAt: Partial<Record<DossierSub, number>> = {};
 
 type AppState = {
   phase: AppPhase;
@@ -15,6 +28,8 @@ type AppState = {
   unread: number;
   pushEnabled: boolean;
   pendingConsentId: number | null;
+  /** Nouveautés non consultées par onglet de Mon dossier */
+  dossierBadges: DossierBadges;
   /** Session app verrouillée (PIN / bio) */
   locked: boolean;
   /** Accès Urgence depuis l'écran de verrouillage */
@@ -27,6 +42,9 @@ type AppState = {
   setUnread: (n: number) => void;
   setPushEnabled: (v: boolean) => void;
   setPendingConsentId: (id: number | null) => void;
+  bumpDossierBadge: (sub: DossierSub, n?: number) => void;
+  clearDossierBadge: (sub: DossierSub) => void;
+  clearAllDossierBadges: () => void;
   setLocked: (v: boolean) => void;
   setUrgenceBypass: (v: boolean) => void;
   toggleDark: () => Promise<void>;
@@ -46,6 +64,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   unread: 0,
   pushEnabled: true,
   pendingConsentId: null,
+  dossierBadges: { ...EMPTY_DOSSIER_BADGES },
   locked: false,
   urgenceBypass: false,
 
@@ -57,6 +76,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   setUnread: (unread) => set({ unread }),
   setPushEnabled: (pushEnabled) => set({ pushEnabled }),
   setPendingConsentId: (pendingConsentId) => set({ pendingConsentId }),
+  bumpDossierBadge: (sub, n = 1) => {
+    const now = Date.now();
+    if ((lastBadgeBumpAt[sub] || 0) + BADGE_DEDUP_MS > now) return;
+    lastBadgeBumpAt[sub] = now;
+    set((s) => ({
+      dossierBadges: {
+        ...s.dossierBadges,
+        [sub]: Math.min(99, (s.dossierBadges[sub] || 0) + Math.max(1, n)),
+      },
+    }));
+  },
+  clearDossierBadge: (sub) =>
+    set((s) => ({
+      dossierBadges: { ...s.dossierBadges, [sub]: 0 },
+    })),
+  clearAllDossierBadges: () => set({ dossierBadges: { ...EMPTY_DOSSIER_BADGES } }),
   setLocked: (locked) => set({ locked, urgenceBypass: locked ? get().urgenceBypass : false }),
   setUrgenceBypass: (urgenceBypass) => set({ urgenceBypass }),
 
@@ -83,6 +118,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       tab: "home",
       unread: 0,
       pendingConsentId: null,
+      dossierBadges: { ...EMPTY_DOSSIER_BADGES },
       locked: false,
       urgenceBypass: false,
     }),

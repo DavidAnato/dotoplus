@@ -114,7 +114,7 @@ function AuthNavigator({ initialRoute }: { initialRoute: keyof AuthStackParamLis
                 console.warn("[dotoplus] demo login failed:", e?.message || e);
                 await storage.saveSnapshot({
                   profile: DEMO_USER,
-                  cardToken: "DEMO-DODOCARD-TOKEN-OFFLINE",
+                  cardToken: "DEMO-DOTOCARD-TOKEN-OFFLINE",
                   cardId: null,
                   syncedAt: new Date().toISOString(),
                 });
@@ -161,7 +161,13 @@ function MainTabs() {
 
   const unreadQ = useUnreadCount(true);
   const pendingQ = usePendingAccessRequests(true);
+  const dossierBadges = useAppStore((s) => s.dossierBadges);
   const alertBadge = (unreadQ.data ?? storeUnread) + (pendingQ.data?.length || 0);
+  const dossierBadgeTotal =
+    (dossierBadges.dossier || 0) +
+    (dossierBadges.ordonnances || 0) +
+    (dossierBadges.examens || 0) +
+    (dossierBadges.assurance || 0);
 
   return (
     <Tab.Navigator
@@ -196,7 +202,18 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeTabScreen} options={{ title: "Accueil" }} />
-      <Tab.Screen name="Dossier" options={{ title: "Dossier" }}>
+      <Tab.Screen
+        name="Dossier"
+        options={{
+          title: "Dossier",
+          tabBarBadge:
+            dossierBadgeTotal > 0
+              ? dossierBadgeTotal > 9
+                ? "9+"
+                : dossierBadgeTotal
+              : undefined,
+        }}
+      >
         {() => <Dossier user={user} dark={dark} />}
       </Tab.Screen>
       <Tab.Screen name="Carte" options={{ title: "Ma carte" }}>

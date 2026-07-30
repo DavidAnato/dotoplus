@@ -386,7 +386,7 @@ export default function Login({
                     paddingHorizontal: 12,
                   }}
                 >
-                  Dossier médical, DodoCard et urgences — accessibles en un scan.
+                  Dossier médical, DotoCard et urgences — accessibles en un scan.
                 </Text>
               </View>
             </StaggerItem>

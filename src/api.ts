@@ -380,7 +380,7 @@ export const api = {
     date_creation?: string;
   }> {
     const res = await request("/api/dodocards/mine/");
-    if (!res.ok) throw new Error("DodoCard introuvable.");
+    if (!res.ok) throw new Error("DotoCard introuvable.");
     return res.json();
   },
 
@@ -390,7 +390,7 @@ export const api = {
     if (!token) throw new Error("Session requise.");
     const dir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
     if (!dir) throw new Error("Stockage local indisponible.");
-    const path = `${dir}DodoCard_${Date.now()}.pdf`;
+    const path = `${dir}DotoCard_${Date.now()}.pdf`;
     const result = await FileSystem.downloadAsync(`${API_URL}/api/dodocards/mine/pdf/`, path, {
       headers: { Authorization: `Bearer ${token}` },
     });

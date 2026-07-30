@@ -57,7 +57,7 @@ function pickNextAppointment(list: any[] | undefined) {
 function quickItems(dark: boolean, nextRdvSub: string) {
   const calendarAccent = dark ? "#FCD34D" : "#B45309";
   return [
-    { key: "carte", icon: "card-outline" as const, label: "Ma DodoCard", sub: "QR & NPI", accent: C.blue },
+    { key: "carte", icon: "card-outline" as const, label: "Ma DotoCard", sub: "QR & NPI", accent: C.blue },
     { key: "dossier", icon: "clipboard-outline" as const, label: "Mon dossier", sub: "Historique", accent: C.navy },
     {
       key: "notifications",

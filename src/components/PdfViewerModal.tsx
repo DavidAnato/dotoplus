@@ -34,7 +34,7 @@ export function PdfViewerModal({
   loading = false,
   onClose,
   onShare,
-  title = "DodoCard PDF",
+  title = "DotoCard PDF",
 }: Props) {
   const [opening, setOpening] = useState(false);
   const [error, setError] = useState<string | null>(null);

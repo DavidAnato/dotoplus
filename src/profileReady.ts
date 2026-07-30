@@ -10,7 +10,7 @@ export type ProfileCheck = {
   icon: "camera-outline" | "person-outline" | "calendar-outline";
 };
 
-/** Minimum pour émettre la première DodoCard (groupe sanguin, etc. = optionnels). */
+/** Minimum pour émettre la première DotoCard (groupe sanguin, etc. = optionnels). */
 export function getFirstCardChecks(user: Profile): ProfileCheck[] {
   const hasPhoto = !!user.photoUrl && user.photoRequired !== true;
   const hasIdentity = !!(user.firstName?.trim() && user.lastName?.trim());
