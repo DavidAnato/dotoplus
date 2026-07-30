@@ -31,7 +31,14 @@
       "permissions": [
         "CAMERA",
         "USE_BIOMETRIC",
-        "USE_FINGERPRINT"
+        "USE_FINGERPRINT",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ],
       "usesCleartextTraffic": true,
       "predictiveBackGestureEnabled": false
@@ -65,6 +72,12 @@
       "expo-sharing",
       "@react-native-community/datetimepicker",
       "expo-audio"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "34f41345-c34a-4ffc-a332-1334a4fd6bc8"
+      }
+    },
+    "owner": "davidanato"
   }
 }
