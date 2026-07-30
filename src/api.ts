@@ -2,10 +2,13 @@ import * as FileSystem from "expo-file-system/legacy";
 import { DEMO_USER, Profile, normalizeProfile } from "./theme";
 import { OfflineSnapshot, storage } from "./storage";
 
-// BlueStacks / Expo : avec `adb reverse tcp:8000 tcp:8000`, 127.0.0.1 atteint l'hôte.
-// AVD sans reverse → EXPO_PUBLIC_API_URL=http://10.0.2.2:8000 ; LAN → IP machine.
+// Local : EXPO_PUBLIC_API_URL ou 127.0.0.1. Preview/prod EAS : URL Render.
 const DEFAULT_HOST = "127.0.0.1";
-const API_URL = process.env.EXPO_PUBLIC_API_URL || `http://${DEFAULT_HOST}:8000`;
+const API_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  (process.env.EAS_BUILD === "true"
+    ? "https://doto-backend-71tk.onrender.com"
+    : `http://${DEFAULT_HOST}:8000`);
 
 /** URI locale utilisable par uploadAsync (file://). */
 async function ensureLocalFileUri(uri: string, filename: string): Promise<string> {

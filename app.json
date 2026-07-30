@@ -14,12 +14,14 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "bj.dotoplus.patient",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Déverrouillage biométrique de DOTO+",
         "NSCameraUsageDescription": "Scan éventuel de codes DotoCard"
       }
     },
     "android": {
+      "package": "bj.dotoplus.patient",
       "adaptiveIcon": {
         "backgroundColor": "#1E3755",
         "foregroundImage": "./assets/android-icon-foreground.png",
