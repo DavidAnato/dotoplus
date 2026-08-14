@@ -3,7 +3,7 @@
     "name": "DOTO+ Patient",
     "slug": "dotoplus",
     "scheme": "dotoplus",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -69,9 +69,18 @@
           "cameraPermission": "Autoriser DOTO+ à utiliser la caméra."
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Autoriser DOTO+ à accéder aux photos pour la pièce d'identité.",
+          "cameraPermission": "Autoriser DOTO+ à prendre une photo de la pièce d'identité."
+        }
+      ],
       "expo-sharing",
       "@react-native-community/datetimepicker",
-      "expo-audio"
+      "expo-audio",
+      "expo-font",
+      "expo-asset"
     ],
     "extra": {
       "eas": {
