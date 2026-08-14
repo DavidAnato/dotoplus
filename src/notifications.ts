@@ -275,3 +275,38 @@ export async function registerPushToken(app = "dotoplus"): Promise<string | null
     return null;
   }
 }
+
+let pendingPush: Record<string, unknown> | null = null;
+
+export function takePendingPush() {
+  const p = pendingPush;
+  pendingPush = null;
+  return p;
+}
+
+/** Navigation au clic d'une notification push (payload type + ids). */
+export function subscribePushNavigation(
+  navigate?: (data: Record<string, unknown>) => void
+): () => void {
+  let sub: { remove: () => void } | undefined;
+  const handle = (data: Record<string, unknown>) => {
+    pendingPush = data;
+    navigate?.(data);
+  };
+  void (async () => {
+    try {
+      const Notifications = await import("expo-notifications");
+      const last = await Notifications.getLastNotificationResponseAsync();
+      if (last?.notification?.request?.content?.data) {
+        handle(last.notification.request.content.data as Record<string, unknown>);
+      }
+      sub = Notifications.addNotificationResponseReceivedListener((resp) => {
+        const data = resp.notification.request.content.data as Record<string, unknown>;
+        if (data) handle(data);
+      });
+    } catch {
+      /* module absent */
+    }
+  })();
+  return () => sub?.remove();
+}

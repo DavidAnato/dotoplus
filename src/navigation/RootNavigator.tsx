@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { BackHandler, Platform, Text, View } from "react-native";
 import {
   NavigationContainer,
@@ -31,6 +31,8 @@ import NotificationsScreen from "../screens/Notifications";
 import RendezVous from "../screens/RendezVous";
 import ProfilComplet from "../screens/ProfilComplet";
 import type { AuthStackParamList, MainTabParamList, RootStackParamList } from "./types";
+import { takePendingPush } from "../notifications";
+import { notificationTarget } from "../notifRoutes";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -75,7 +77,7 @@ function OfflineBanner() {
     >
       <Ionicons name="cloud-offline-outline" size={16} color={colors.amber} />
       <Text style={{ color: colors.amber, fontWeight: "700", fontSize: 12, flex: 1 }}>
-        Hors ligne — données en cache (urgence / dossier)
+        Hors ligne — cache local, file d'actions rejouée à la reconnexion
       </Text>
     </View>
   );
@@ -108,7 +110,7 @@ function AuthNavigator({ initialRoute }: { initialRoute: keyof AuthStackParamLis
               try {
                 queryClient.clear();
                 await api.requestOtp(DEMO_USER.phone, "login");
-                const profile = await api.login(DEMO_USER.phone, "000000");
+                const profile = await api.login(DEMO_USER.phone, "00000");
                 enterMain(profile);
               } catch (e: any) {
                 console.warn("[dotoplus] demo login failed:", e?.message || e);
@@ -321,6 +323,21 @@ function MainNavigator() {
 export function RootNavigator({ authInitial }: { authInitial?: keyof AuthStackParamList }) {
   const phase = useAppStore((s) => s.phase);
   const dark = useAppStore((s) => s.dark);
+  const navRef = useRef<any>(null);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const data = takePendingPush();
+      if (!data || !navRef.current) return;
+      try {
+        const t = notificationTarget({ ...data, payload: data });
+        navRef.current.navigate(t.screen, t.params);
+      } catch {
+        /* nav not ready */
+      }
+    }, 700);
+    return () => clearInterval(id);
+  }, []);
 
   const navTheme = dark
     ? {
@@ -348,7 +365,7 @@ export function RootNavigator({ authInitial }: { authInitial?: keyof AuthStackPa
 
   if (phase === "onboarding" || phase === "login") {
     return (
-      <NavigationContainer theme={navTheme}>
+      <NavigationContainer theme={navTheme} ref={navRef}>
         <AuthNavigator
           initialRoute={authInitial || (phase === "onboarding" ? "Onboarding" : "Login")}
         />
@@ -357,7 +374,7 @@ export function RootNavigator({ authInitial }: { authInitial?: keyof AuthStackPa
   }
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer theme={navTheme} ref={navRef}>
       <MainNavigator />
     </NavigationContainer>
   );

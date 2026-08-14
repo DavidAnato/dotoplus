@@ -453,7 +453,7 @@ export default function Parametres({
             <SettingsRow
               icon="key-outline"
               label="PIN de déverrouillage"
-              subtitle={user.hasPin ? "PIN configuré · 5 chiffres" : "Optionnel · 5 chiffres"}
+              subtitle={user.hasPin ? "PIN configuré · 4 chiffres" : "Optionnel · 4 chiffres"}
               colors={colors}
               onPress={() => {
                 setMsg("");
@@ -592,7 +592,7 @@ export default function Parametres({
             dark={!!dark}
             disabled={pinBusy}
             loading={pinBusy}
-            label={pinStep === "confirm" ? "Confirmez le PIN" : "Nouveau PIN (5 chiffres)"}
+            label={pinStep === "confirm" ? "Confirmez le PIN" : "Nouveau PIN (4 chiffres)"}
           />
           {msg ? (
             <Text

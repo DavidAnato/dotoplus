@@ -31,7 +31,7 @@ npm start                   # puis 'a' (Android), 'i' (iOS) ou 'w' (web)
 
 ## Connexion
 - Tél `+229 97 45 12 88` / `demo123`
-- OTP mock `000000` (inscription / changement MDP uniquement)
+- OTP mock `00000` (inscription / changement MDP uniquement)
 - Bouton « Continuer en démo » → urgence hors ligne sans API
 
 Configurez `EXPO_PUBLIC_API_URL` (voir `.env.example`).

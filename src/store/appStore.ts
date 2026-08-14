@@ -32,6 +32,7 @@ type AppState = {
   dossierBadges: DossierBadges;
   /** Session app verrouillée (PIN / bio) */
   locked: boolean;
+  needsPinSetup: boolean;
   /** Accès Urgence depuis l'écran de verrouillage */
   urgenceBypass: boolean;
   setPhase: (p: AppPhase) => void;
@@ -46,6 +47,7 @@ type AppState = {
   clearDossierBadge: (sub: DossierSub) => void;
   clearAllDossierBadges: () => void;
   setLocked: (v: boolean) => void;
+  setNeedsPinSetup: (v: boolean) => void;
   setUrgenceBypass: (v: boolean) => void;
   toggleDark: () => Promise<void>;
   hydrateTheme: () => Promise<void>;
@@ -66,6 +68,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   pendingConsentId: null,
   dossierBadges: { ...EMPTY_DOSSIER_BADGES },
   locked: false,
+  needsPinSetup: false,
   urgenceBypass: false,
 
   setPhase: (phase) => set({ phase }),
@@ -93,6 +96,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     })),
   clearAllDossierBadges: () => set({ dossierBadges: { ...EMPTY_DOSSIER_BADGES } }),
   setLocked: (locked) => set({ locked, urgenceBypass: locked ? get().urgenceBypass : false }),
+  setNeedsPinSetup: (needsPinSetup) => set({ needsPinSetup }),
   setUrgenceBypass: (urgenceBypass) => set({ urgenceBypass }),
 
   toggleDark: async () => {
@@ -109,7 +113,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       user: normalizeProfile(user),
       phase: "main",
       tab: "home",
-      locked: !!user.requireUnlock && (!!user.hasPin || false),
+      locked: false,
+      needsPinSetup: !user.hasPin,
       urgenceBypass: false,
     }),
   resetSessionState: () =>
@@ -120,6 +125,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       pendingConsentId: null,
       dossierBadges: { ...EMPTY_DOSSIER_BADGES },
       locked: false,
+      needsPinSetup: false,
       urgenceBypass: false,
     }),
   colors: () => (get().dark ? darkC : C),
@@ -146,6 +152,23 @@ export async function pingOnline() {
     clearTimeout(t);
     if (res.ok) {
       useAppStore.getState().setOnline(true);
+      try {
+        const { replayOfflineQueue } = await import("../offlineQueue");
+        await replayOfflineQueue(async (a) => {
+          const token = await storage.getAccess();
+          const r = await fetch(`${api.url}${a.path}`, {
+            method: a.method,
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: a.body != null ? JSON.stringify(a.body) : undefined,
+          });
+          return { ok: r.ok || r.status === 202, status: r.status };
+        });
+      } catch {
+        /* ignore */
+      }
       return;
     }
     useAppStore.getState().setOnline(true);

@@ -20,7 +20,7 @@ import { storage } from "./src/storage";
 import { wipeClientCaches } from "./src/session";
 import { persistOptions, queryClient } from "./src/queries/queryClient";
 import { pingOnline, useAppStore } from "./src/store/appStore";
-import { usePatientSSE, registerPushToken } from "./src/notifications";
+import { usePatientSSE, registerPushToken, subscribePushNavigation } from "./src/notifications";
 import { useUnreadCount, useDossierBadgesFromNotifications } from "./src/queries/hooks";
 import { RootNavigator } from "./src/navigation/RootNavigator";
 import { PinLockScreen } from "./src/components/PinInput";
@@ -80,10 +80,12 @@ function AppInner() {
   const dark = useAppStore((s) => s.dark);
   const user = useAppStore((s) => s.user);
   const locked = useAppStore((s) => s.locked);
+  const needsPinSetup = useAppStore((s) => s.needsPinSetup);
   const urgenceBypass = useAppStore((s) => s.urgenceBypass);
   const setPhase = useAppStore((s) => s.setPhase);
   const setUser = useAppStore((s) => s.setUser);
   const setLocked = useAppStore((s) => s.setLocked);
+  const setNeedsPinSetup = useAppStore((s) => s.setNeedsPinSetup);
   const setUrgenceBypass = useAppStore((s) => s.setUrgenceBypass);
   const enterMain = useAppStore((s) => s.enterMain);
   const hydrateTheme = useAppStore((s) => s.hydrateTheme);
@@ -111,6 +113,10 @@ function AppInner() {
     }
   }, [phase, pushEnabled]);
 
+  useEffect(() => {
+    return subscribePushNavigation();
+  }, []);
+
   /** Prompt biométrie (empreinte / Face ID). `requireEnabled` = auto-unlock au retour. */
   const promptBiometric = useCallback(async (): Promise<boolean> => {
     const hw = await LocalAuthentication.hasHardwareAsync();
@@ -125,12 +131,15 @@ function AppInner() {
   }, []);
 
   const tryBiometricUnlock = useCallback(async (): Promise<boolean> => {
-    if (!(await storage.isBioEnabled())) return false;
-    return promptBiometric();
+    const hw = await LocalAuthentication.hasHardwareAsync();
+    const enrolled = hw && (await LocalAuthentication.isEnrolledAsync());
+    if (!enrolled) return false;
+    const ok = await promptBiometric();
+    if (ok) await storage.setBioEnabled(true);
+    return ok;
   }, [promptBiometric]);
 
   const shouldLock = useCallback(async (profile: { requireUnlock?: boolean; hasPin?: boolean }) => {
-    if (!profile.requireUnlock) return false;
     if (profile.hasPin) return true;
     const bio = await storage.isBioEnabled();
     return bio;
@@ -162,7 +171,7 @@ function AppInner() {
     const sub = AppState.addEventListener("change", async (s) => {
       if (s === "active") {
         pingOnline();
-        if (wasBackground.current && phase === "main") {
+        if (wasBackground.current && phase === "main" && !needsPinSetup) {
           const left = backgroundAt.current;
           const awayLongEnough = left != null && Date.now() - left >= AWAY_LOCK_MS;
           if (awayLongEnough) {
@@ -185,7 +194,7 @@ function AppInner() {
       clearInterval(id);
       sub.remove();
     };
-  }, [phase, setLocked, shouldLock]);
+  }, [phase, setLocked, shouldLock, needsPinSetup]);
 
   useEffect(() => {
     (async () => {
@@ -266,6 +275,24 @@ function AppInner() {
     }
   };
 
+  const setupPin = async (pin: string) => {
+    if (pinBusyRef.current) return;
+    pinBusyRef.current = true;
+    setPinBusy(true);
+    setPinError("");
+    try {
+      await api.setPin(pin);
+      setUser({ ...user, hasPin: true });
+      setNeedsPinSetup(false);
+      setLocked(false);
+    } catch (e: any) {
+      setPinError(e.message || "Impossible d'enregistrer le PIN.");
+    } finally {
+      pinBusyRef.current = false;
+      setPinBusy(false);
+    }
+  };
+
   if (phase === "boot") {
     return (
       <SafeAreaProvider>
@@ -275,8 +302,8 @@ function AppInner() {
   }
 
   const barBg = brandNavy;
-  const showLock = phase === "main" && locked;
-  const urgenceOk = user.urgenceWhenLocked !== false;
+  const showLock = phase === "main" && (locked || needsPinSetup);
+  const urgenceOk = user.urgenceWhenLocked !== false && !needsPinSetup;
 
   return (
     <SafeAreaProvider>
@@ -295,14 +322,19 @@ function AppInner() {
                 />
               ) : (
                 <PinLockScreen
-                  title="DOTO+ verrouillé"
-                  subtitle="Entrez votre code PIN pour continuer"
+                  mode={needsPinSetup ? "setup" : "unlock"}
+                  title={needsPinSetup ? "Configurer le PIN" : "DOTO+ verrouillé"}
+                  subtitle={
+                    needsPinSetup
+                      ? "Code à 4 chiffres pour les prochaines ouvertures"
+                      : "Entrez votre code PIN pour continuer"
+                  }
                   dark={dark}
                   error={pinError}
                   loading={pinBusy}
-                  bioAvailable={bioAvailable}
-                  onBio={unlockWithBio}
-                  onSubmit={unlockWithPin}
+                  bioAvailable={!needsPinSetup && bioAvailable}
+                  onBio={needsPinSetup ? undefined : unlockWithBio}
+                  onSubmit={needsPinSetup ? setupPin : unlockWithPin}
                   onUrgence={
                     urgenceOk
                       ? () => setUrgenceBypass(true)

@@ -101,6 +101,30 @@ async function tryRefresh(): Promise<boolean> {
 }
 
 async function request(path: string, options: RequestInit = {}, retry = true): Promise<Response> {
+  const method = String(options.method || "GET").toUpperCase();
+  const navOffline =
+    typeof navigator !== "undefined" &&
+    typeof navigator.onLine === "boolean" &&
+    !navigator.onLine;
+  if (
+    navOffline &&
+    (method === "POST" || method === "PATCH" || method === "PUT") &&
+    path.startsWith("/api/") &&
+    !path.includes("/auth/")
+  ) {
+    const { enqueueOffline } = await import("./offlineQueue");
+    let body: unknown;
+    try {
+      body = options.body ? JSON.parse(String(options.body)) : undefined;
+    } catch {
+      body = undefined;
+    }
+    await enqueueOffline({ method: method as "POST" | "PATCH" | "PUT", path, body });
+    return new Response(JSON.stringify({ queued: true, offline: true }), {
+      status: 202,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
   const headers = {
     ...(await authHeaders()),
     ...(options.headers as Record<string, string> | undefined),

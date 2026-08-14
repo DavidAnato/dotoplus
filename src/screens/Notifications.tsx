@@ -27,8 +27,11 @@ import {
 } from "../motion";
 import { StoryArt } from "../components/StoryArt";
 import { useAppStore } from "../store/appStore";
-import { usePullRefresh } from "../hooks/usePullRefresh";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { qk } from "../queries/keys";
+import type { RootStackParamList } from "../navigation/types";
+import { notificationTarget } from "../notifRoutes";
 
 export function ConsentCard({
   req,
@@ -117,6 +120,7 @@ export function ConsentCard({
 
 export default function NotificationsScreen({ dark = false }: { dark?: boolean }) {
   const colors = dark ? darkC : C;
+  const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const online = useAppStore((s) => s.online);
   const { data: notifs = [], isLoading, isFetching } = useNotifications(true);
   const pending = usePendingAccessRequests(online);
@@ -238,6 +242,8 @@ export default function NotificationsScreen({ dark = false }: { dark?: boolean }
                 key={n.id}
                 onPress={() => {
                   if (!n.read_at && !n.is_read) mark.mutate(n.id);
+                  const t = notificationTarget(n);
+                  nav.navigate(t.screen as any, t.params as any);
                 }}
               >
                 <Card

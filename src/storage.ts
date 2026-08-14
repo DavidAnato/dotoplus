@@ -104,7 +104,7 @@ export const storage = {
   },
 
   async saveLocalPin(pin: string) {
-    if (!/^\d{5}$/.test(pin)) return;
+    if (!/^\d{4}$/.test(pin)) return;
     await secureSet(KEYS.localPin, pin);
   },
   async getLocalPin() {

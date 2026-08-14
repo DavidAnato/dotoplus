@@ -262,7 +262,7 @@ export default function Login({
     try {
       const res = await api.requestOtp(fullPhone(), purpose);
       setHint(res.hint || "Code envoyé par SMS.");
-      if (String(res.hint || "").includes("000000")) setOtp("000000");
+      if (String(res.hint || "").includes("00000")) setOtp("00000");
       if (purpose === "login") setLoginStep("otp");
       else setRegisterStep("otp");
     } catch (e: any) {
@@ -523,7 +523,7 @@ export default function Login({
               title={loginStep === "phone" ? "Connexion" : "Code SMS"}
               subtitle={
                 loginStep === "phone"
-                  ? "Entrez le numéro lié à votre compte. Un code à 6 chiffres vous sera envoyé."
+                  ? "Entrez le numéro lié à votre compte. Un code à 5 chiffres vous sera envoyé."
                   : `Code envoyé au ${displayPhoneBj(fullPhone())}. Saisissez-le pour entrer.`
               }
             />
@@ -564,13 +564,13 @@ export default function Login({
                     error={!!error && !verifying}
                     dark={dark}
                     secure={false}
-                    length={6}
+                    length={5}
                     label="Code reçu par SMS"
                     disabled={busy}
                     loading={verifying}
                   />
                   <Text style={{ color: colors.muted, fontSize: 12, textAlign: "center", marginTop: 8, marginBottom: 14 }}>
-                    {verifying ? "Vérification…" : hint || "6 chiffres"}
+                    {verifying ? "Vérification…" : hint || "5 chiffres"}
                   </Text>
                   {error ? (
                     <Text style={{ color: C.emergency, fontWeight: "600", marginBottom: 12 }}>{error}</Text>
@@ -580,7 +580,7 @@ export default function Login({
                     icon="log-in-outline"
                     onPress={() => void submitLogin()}
                     loading={verifying}
-                    disabled={busy || otp.trim().length < 6}
+                    disabled={busy || otp.trim().length < 5}
                   />
                   <PressScale
                     onPress={() => void sendOtp("login")}
@@ -763,13 +763,13 @@ export default function Login({
                   error={!!error && !verifying}
                   dark={dark}
                   secure={false}
-                  length={6}
+                  length={5}
                   label="Code reçu par SMS"
                   disabled={busy}
                   loading={verifying}
                 />
                 <Text style={{ color: colors.muted, fontSize: 12, textAlign: "center", marginTop: 8, marginBottom: 14 }}>
-                  {verifying ? "Création du compte…" : hint || "6 chiffres"}
+                  {verifying ? "Création du compte…" : hint || "5 chiffres"}
                 </Text>
                 {error ? (
                   <Text style={{ color: C.emergency, fontWeight: "600", marginBottom: 12 }}>{error}</Text>
@@ -779,7 +779,7 @@ export default function Login({
                   icon="checkmark-circle-outline"
                   onPress={() => void submitRegister()}
                   loading={verifying}
-                  disabled={busy || otp.trim().length < 6}
+                  disabled={busy || otp.trim().length < 5}
                 />
                 <PressScale
                   onPress={() => void sendOtp("register")}

@@ -263,11 +263,16 @@ function DossierTab({
                   }}
                 />
                 <View style={{ flex: 1 }}>
+                  <Text style={{ fontWeight: "800", color: colors.text }}>
+                    {c.titre ||
+                      [c.specialite || "Consultation", c.medecin_nom, c.structure_nom]
+                        .filter(Boolean)
+                        .join(" — ") ||
+                      "Consultation"}
+                  </Text>
                   <Text style={{ color: colors.muted, fontSize: 12 }}>
                     {c.date ? new Date(c.date).toLocaleDateString("fr-FR") : "—"}
-                  </Text>
-                  <Text style={{ fontWeight: "800", color: colors.text }}>
-                    {c.structure_nom || "Structure"}
+                    {c.appointment_id ? " · Liée à un RDV" : ""}
                   </Text>
                   <Text style={{ color: colors.muted, fontSize: 12 }}>
                     {c.medecin_nom || ""}
