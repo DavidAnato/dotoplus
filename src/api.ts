@@ -40,7 +40,7 @@ function mapPatient(p: any): Profile {
     motherName: p.nom_mere || "",
     addressCommune: p.adresse_commune || "",
     addressQuartier: p.adresse_quartier || "",
-    hasInsurance: !!assurance,
+    hasInsurance: !!(assurance?.assureur && assurance.droits_valides !== false),
     insurer: assurance?.assureur || "",
     policyNumber: assurance?.num_police || "",
     hasPin: !!p.has_pin,
@@ -612,6 +612,16 @@ export const api = {
       throw new Error(data.detail || "Mise à jour assurance impossible.");
     }
     return res.json();
+  },
+
+  async deleteMyAssurance() {
+    const res = await request("/api/patients/me/assurance/", { method: "DELETE" });
+    if (res.status === 404) return null;
+    if (!res.ok && res.status !== 204) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || "Retrait assurance impossible.");
+    }
+    return null;
   },
 
   async appointments(): Promise<any[]> {

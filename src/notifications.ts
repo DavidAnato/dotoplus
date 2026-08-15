@@ -6,6 +6,7 @@ import { storage } from "./storage";
 import { useAppStore, type DossierSub } from "./store/appStore";
 import { qk } from "./queries/keys";
 import { playAccessRequestSound } from "./sounds";
+import { connectSse } from "./sse";
 
 const POLL_MS = 4_000;
 const DOSSIER_POLL_MS = 12_000;
@@ -24,6 +25,7 @@ const DOSSIER_EVENT_TYPES = new Set([
   "ordonnance",
   "examen",
   "appointment",
+  "insurance_updated",
 ]);
 
 function refreshConsentQueries(qc: QueryClient) {
@@ -42,6 +44,47 @@ function refreshDossierQueries(qc: QueryClient) {
 
 function refreshAppointments(qc: QueryClient) {
   void qc.invalidateQueries({ queryKey: qk.appointments });
+}
+
+async function refreshProfile(qc: QueryClient) {
+  void qc.invalidateQueries({ queryKey: qk.me });
+  void qc.invalidateQueries({ queryKey: qk.assurance });
+  try {
+    const profile = await api.me();
+    if (profile) useAppStore.getState().setUser(profile);
+  } catch {
+    /* ignore */
+  }
+}
+
+function applyInsuranceFromEvent(data: {
+  type?: string;
+  kind?: string;
+  has_insurance?: boolean;
+  assureur?: string;
+  num_police?: string;
+  payload?: {
+    has_insurance?: boolean;
+    assureur?: string;
+    num_police?: string;
+    kind?: string;
+  };
+}) {
+  const kind = data.kind || data.payload?.kind;
+  const has =
+    kind === "removed"
+      ? false
+      : data.has_insurance ?? data.payload?.has_insurance ?? false;
+  const insurer = has ? data.assureur || data.payload?.assureur || "" : "";
+  const policy = has ? data.num_police || data.payload?.num_police || "" : "";
+  const user = useAppStore.getState().user;
+  if (!user) return;
+  useAppStore.getState().setUser({
+    ...user,
+    hasInsurance: !!has,
+    insurer,
+    policyNumber: policy,
+  });
 }
 
 function sectionFromEvent(data: {
@@ -64,8 +107,9 @@ function sectionFromEvent(data: {
   if (kind === "ordonnance") return "ordonnances";
   if (kind === "examen") return "examens";
   if (kind === "dossier_updated") return "dossier";
-  if (kind === "appointment") return "rdv";
+  if (kind === "appointment" || kind === "insurance_updated") return kind === "appointment" ? "rdv" : "assurance";
   if (data.payload?.kind?.startsWith("rdv")) return "rdv";
+  if (data.payload?.kind?.startsWith("insurance")) return "assurance";
   return null;
 }
 
@@ -74,7 +118,16 @@ function applyDossierEvent(
   data: {
     type?: string;
     notif_type?: string;
-    payload?: { section?: string; kind?: string };
+    has_insurance?: boolean;
+    assureur?: string;
+    num_police?: string;
+    payload?: {
+      section?: string;
+      kind?: string;
+      has_insurance?: boolean;
+      assureur?: string;
+      num_police?: string;
+    };
   },
   opts?: { bump?: boolean }
 ) {
@@ -83,6 +136,13 @@ function applyDossierEvent(
 
   if (section === "rdv" || data.type === "appointment") {
     refreshAppointments(qc);
+    return;
+  }
+
+  if (section === "assurance" || data.type === "insurance_updated") {
+    applyInsuranceFromEvent(data);
+    void refreshProfile(qc);
+    if (bump) useAppStore.getState().bumpDossierBadge("assurance");
     return;
   }
 
@@ -96,25 +156,18 @@ function applyDossierEvent(
     if (bump) useAppStore.getState().bumpDossierBadge("examens");
     return;
   }
-  if (section === "assurance") {
-    if (bump) useAppStore.getState().bumpDossierBadge("assurance");
-    return;
-  }
   if (bump) useAppStore.getState().bumpDossierBadge("dossier");
 }
 
 /**
- * Temps réel consentement / alertes / Mon dossier.
- *
- * React Native n'a pas EventSource fiable → le polling (4s app active) est le
- * chemin principal pour le consentement. SSE (web / polyfill) est additif.
- * Historique dossier : poll plus lent (12s) + invalidation immédiate sur events.
+ * Temps réel consentement / alertes / Mon dossier / RDV / assurance.
+ * SSE (EventSource web + XHR natif) + poll de secours si le flux tombe.
  */
 export function usePatientSSE(enabled: boolean) {
   const qc = useQueryClient();
   const setUnread = useAppStore((s) => s.setUnread);
   const online = useAppStore((s) => s.online);
-  const esRef = useRef<EventSource | null>(null);
+  const closeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     if (!enabled || !online) return;
@@ -142,10 +195,11 @@ export function usePatientSSE(enabled: boolean) {
             nt === "ordonnance" ||
             nt === "examen" ||
             nt === "dossier_updated" ||
+            nt === "appointment" ||
             data.payload?.section ||
-            data.payload?.kind?.startsWith?.("rdv")
+            data.payload?.kind?.startsWith?.("rdv") ||
+            data.payload?.kind?.startsWith?.("insurance")
           ) {
-            // bump dédupliqué : couvre RN sans EventSource + web (event typé compagnon)
             applyDossierEvent(qc, data, { bump: true });
           }
         }
@@ -177,41 +231,27 @@ export function usePatientSSE(enabled: boolean) {
       dossierPoll = setInterval(tickDossier, DOSSIER_POLL_MS);
     };
 
-    const connectSse = async () => {
+    const connect = async () => {
       if (closed) return;
-      if (typeof EventSource === "undefined") return;
-
       const access = await storage.getAccess();
       if (!access || closed) return;
-
-      try {
-        esRef.current?.close();
-        const es = new EventSource(api.patientEventsUrl(access));
-        esRef.current = es;
-        es.onmessage = (msg) => {
-          try {
-            handleEvent(JSON.parse(msg.data));
-          } catch {
-            /* ignore */
-          }
-        };
-        es.onerror = () => {
-          es.close();
-          esRef.current = null;
-          if (!closed) retry = setTimeout(() => void connectSse(), 8000);
-        };
-      } catch {
-        /* polling already running */
-      }
+      closeRef.current?.();
+      closeRef.current = connectSse(api.patientEventsUrl(access), handleEvent, {
+        onError: () => {
+          closeRef.current = null;
+          if (!closed) retry = setTimeout(() => void connect(), 5000);
+        },
+      });
     };
 
     startPoll();
-    void connectSse();
+    void connect();
 
     appSub = AppState.addEventListener("change", (state) => {
       if (state === "active") {
         tickConsent();
         tickDossier();
+        void connect();
       }
     });
 
@@ -221,8 +261,8 @@ export function usePatientSSE(enabled: boolean) {
       if (poll) clearInterval(poll);
       if (dossierPoll) clearInterval(dossierPoll);
       appSub?.remove();
-      esRef.current?.close();
-      esRef.current = null;
+      closeRef.current?.();
+      closeRef.current = null;
     };
   }, [enabled, online, qc, setUnread]);
 }

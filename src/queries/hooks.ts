@@ -292,6 +292,10 @@ export function useDossierBadgesFromNotifications(enabled = true) {
       } else if (section === "assurance") {
         useAppStore.getState().bumpDossierBadge("assurance");
         void qc.invalidateQueries({ queryKey: qk.assurance });
+        void qc.invalidateQueries({ queryKey: qk.me });
+        void api.me().then((profile) => {
+          if (profile) useAppStore.getState().setUser(profile);
+        });
       } else if (section === "dossier" || type === "dossier_updated") {
         useAppStore.getState().bumpDossierBadge("dossier");
         void qc.invalidateQueries({ queryKey: qk.historique });

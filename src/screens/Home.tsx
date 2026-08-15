@@ -6,16 +6,13 @@ import { Card, SectionLabel } from "../ui";
 import { C, Profile, darkC } from "../theme";
 import {
   BrandBackground,
-  CardDecor,
   EmptyState,
-  IconBadge,
   PressScale,
   ScreenEnter,
   StaggerItem,
   hapticMedium,
 } from "../motion";
 import { CriticalHeroStrip, CriticalMedicalCard, ThemedIconBadge } from "../components/CriticalMedical";
-import { IconRibbon } from "../components/StoryArt";
 import { usePendingAccessRequests, useUnreadCount, useAppointments } from "../queries/hooks";
 import { qk } from "../queries/keys";
 import { ConsentCard } from "./Notifications";
@@ -37,12 +34,6 @@ function formatRdvWhen(iso: string) {
   });
 }
 
-function formatRdvShort(iso: string) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" });
-}
-
 function pickNextAppointment(list: any[] | undefined) {
   if (!list?.length) return null;
   const now = Date.now();
@@ -52,29 +43,6 @@ function pickNextAppointment(list: any[] | undefined) {
     .filter((x) => !Number.isNaN(x.t) && x.t >= now - 60 * 60 * 1000)
     .sort((x, y) => x.t - y.t);
   return upcoming[0]?.a ?? null;
-}
-
-function quickItems(dark: boolean, nextRdvSub: string) {
-  const calendarAccent = dark ? "#FCD34D" : "#B45309";
-  return [
-    { key: "carte", icon: "card-outline" as const, label: "Ma DotoCard", sub: "QR & NPI", accent: C.blue },
-    { key: "dossier", icon: "clipboard-outline" as const, label: "Mon dossier", sub: "Historique", accent: C.navy },
-    {
-      key: "notifications",
-      icon: "notifications-outline" as const,
-      label: "Alertes",
-      sub: "Consentements",
-      accent: C.emerald,
-    },
-    {
-      key: "rdv",
-      icon: "calendar" as const,
-      label: "Rendez-vous",
-      sub: nextRdvSub,
-      accent: calendarAccent,
-      themedCalendar: true,
-    },
-  ];
 }
 
 export default function Home({
@@ -99,10 +67,6 @@ export default function Home({
   const pendingList = pending.data || [];
   const unread = unreadQ.data ?? storeUnread;
   const nextRdv = pickNextAppointment(apptsQ.data);
-  const QUICK = quickItems(
-    dark,
-    nextRdv?.debut ? `Prochain ${formatRdvShort(nextRdv.debut)}` : "Aucun à venir"
-  );
   const { refreshControl } = usePullRefresh({
     keys: [qk.accessPending, qk.unread, qk.notifications, qk.me, qk.appointments],
     refetch: [
@@ -185,7 +149,6 @@ export default function Home({
           </View>
 
           <CriticalHeroStrip user={user} />
-          <IconRibbon icons={["medkit", "card", "calendar", "heart"]} dark={dark} />
         </LinearGradient>
 
         <ScrollView
@@ -201,77 +164,7 @@ export default function Home({
             </View>
           ) : null}
 
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-            {QUICK.map((q, i) => (
-              <StaggerItem
-                key={q.key}
-                index={i}
-                style={{ width: "47%", maxWidth: "48%", flexGrow: 1 }}
-              >
-                <PressScale
-                  onPress={() => onNavigate?.(q.key)}
-                  style={{
-                    backgroundColor: colors.white,
-                    borderRadius: 18,
-                    padding: 14,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    shadowColor: "#1E3755",
-                    shadowOpacity: 0.07,
-                    shadowRadius: 8,
-                    elevation: 2,
-                    overflow: "hidden",
-                    minHeight: 108,
-                  }}
-                >
-                  <CardDecor variant={i % 2 === 0 ? "teal" : "navy"} dark={dark} />
-                  <View style={{ alignSelf: "flex-start" }}>
-                    {"themedCalendar" in q && q.themedCalendar ? (
-                      <ThemedIconBadge name={q.icon} dark={dark} size={40} tone="calendar" />
-                    ) : (
-                      <IconBadge name={q.icon} color={q.accent} size={40} />
-                    )}
-                    {q.key === "notifications" && (unread > 0 || pendingList.length > 0) ? (
-                      <View
-                        style={{
-                          position: "absolute",
-                          top: -4,
-                          right: -4,
-                          backgroundColor: C.emergency,
-                          borderRadius: 10,
-                          minWidth: 18,
-                          height: 18,
-                          alignItems: "center",
-                          justifyContent: "center",
-                          paddingHorizontal: 4,
-                        }}
-                      >
-                        <Text style={{ color: "#fff", fontSize: 10, fontWeight: "800" }}>
-                          {(() => {
-                            const n = unread + pendingList.length;
-                            return n > 9 ? "9+" : String(n);
-                          })()}
-                        </Text>
-                      </View>
-                    ) : null}
-                  </View>
-                  <Text
-                    style={{
-                      color: colors.text,
-                      fontWeight: "800",
-                      marginTop: 10,
-                      fontSize: 13,
-                    }}
-                  >
-                    {q.label}
-                  </Text>
-                  <Text style={{ color: colors.muted, fontSize: 11, marginTop: 2 }}>{q.sub}</Text>
-                </PressScale>
-              </StaggerItem>
-            ))}
-          </View>
-
-          <StaggerItem index={4}>
+          <StaggerItem index={0}>
             <Card colors={colors} onPress={() => onNavigate?.("rdv")} decor="teal">
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
                 <ThemedIconBadge name="calendar" dark={dark} size={44} tone="calendar" />
@@ -319,7 +212,7 @@ export default function Home({
             <CriticalMedicalCard user={user} dark={dark} />
           </View>
 
-          <StaggerItem index={5}>
+          <StaggerItem index={1}>
             <Card colors={colors} onPress={() => onNavigate?.("notifications")}>
               <View
                 style={{
