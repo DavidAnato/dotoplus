@@ -216,7 +216,7 @@ function DossierTab({
 
       <StaggerItem index={1}>
         <Card colors={colors}>
-          <SectionLabel color={dark ? darkC.amber : C.amber}>Maladies chroniques</SectionLabel>
+          <SectionLabel color={dark ? darkC.amber : C.amber}>Antécédents médicaux</SectionLabel>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {user.chronic?.length ? (
               user.chronic.map((c: any) => (
@@ -228,10 +228,15 @@ function DossierTab({
                       : c.nom}
                 </Pill>
               ))
-            ) : (
-              <Text style={{ color: colors.muted }}>Aucune</Text>
+            ) : user.antecedents ? null : (
+              <Text style={{ color: colors.muted }}>Aucun antécédent renseigné</Text>
             )}
           </View>
+          {user.antecedents ? (
+            <Text style={{ color: colors.text, fontSize: 13, lineHeight: 19, marginTop: 10 }}>
+              {user.antecedents}
+            </Text>
+          ) : null}
         </Card>
       </StaggerItem>
 
@@ -304,6 +309,29 @@ function DossierTab({
   );
 }
 
+function formatMedLine(m: any): string {
+  const poso =
+    m.unites_par_prise && m.frequence_par_jour
+      ? `${m.unites_par_prise} × ${m.frequence_par_jour}`
+      : m.frequence || "";
+  const duree = m.duree_jours
+    ? `${m.duree_jours} jour${Number(m.duree_jours) > 1 ? "s" : ""}`
+    : "";
+  const momentMap: Record<string, string> = {
+    a_jeun: "À jeun",
+    avant_repas: "Avant les repas",
+    pendant_repas: "Pendant les repas",
+    apres_repas: "Après les repas",
+    entre_repas: "Entre les repas",
+    au_coucher: "Au coucher",
+  };
+  const moment = momentMap[m.moment] || "";
+  return [m.nom, m.dosage, m.forme, m.quantite, poso, duree, moment, m.instructions]
+    .map((x) => (x == null ? "" : String(x).trim()))
+    .filter((x) => x && x !== "—")
+    .join(" — ");
+}
+
 function Ordonnances({ dark, items }: { dark: boolean; items: any[] }) {
   const colors = dark ? darkC : C;
   if (!items.length) {
@@ -332,15 +360,28 @@ function Ordonnances({ dark, items }: { dark: boolean; items: any[] }) {
                     : "Ordonnance"}
                 </Text>
                 <Text style={{ color: colors.muted, fontSize: 12 }}>
-                  {o.medecin_nom || ""} · {o.statut_label || o.statut}
+                  {[o.medecin_nom, o.structure_nom, o.statut_label || o.statut]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </Text>
+                {o.medecin_telephone ? (
+                  <Text style={{ color: colors.muted, fontSize: 12 }}>Tél. {o.medecin_telephone}</Text>
+                ) : null}
               </View>
             </View>
             {(o.medicaments || []).map((m: any) => (
-              <Text key={m.id || m.nom} style={{ color: colors.text, fontSize: 13, marginTop: 6 }}>
-                • {m.nom} {m.dosage} — {m.frequence}
+              <Text
+                key={m.id || m.nom}
+                style={{ color: colors.text, fontSize: 13, marginTop: 8, lineHeight: 19 }}
+              >
+                • {formatMedLine(m)}
               </Text>
             ))}
+            {o.instructions ? (
+              <Text style={{ color: colors.muted, fontSize: 12, marginTop: 8, lineHeight: 18 }}>
+                {o.instructions}
+              </Text>
+            ) : null}
           </Card>
         </StaggerItem>
       ))}

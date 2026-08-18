@@ -181,6 +181,7 @@ export function Field({
   colors = C,
   maxLength,
   disabled = false,
+  multiline = false,
 }: {
   label: string;
   value: string;
@@ -191,6 +192,7 @@ export function Field({
   colors?: ThemeColors;
   maxLength?: number;
   disabled?: boolean;
+  multiline?: boolean;
 }) {
   const [revealed, setRevealed] = useState(false);
   const isSecret = !!secureTextEntry;
@@ -216,6 +218,7 @@ export function Field({
               color: disabled ? colors.muted : colors.text,
               paddingRight: isSecret ? 48 : 14,
             },
+            multiline ? { minHeight: 88, textAlignVertical: "top" as const } : null,
           ]}
           value={value}
           onChangeText={onChangeText}
@@ -223,9 +226,10 @@ export function Field({
           placeholderTextColor={colors.grey}
           secureTextEntry={isSecret && !revealed}
           keyboardType={keyboardType}
-          autoCapitalize="none"
+          autoCapitalize={multiline ? "sentences" : "none"}
           maxLength={maxLength}
           editable={!disabled}
+          multiline={multiline}
           accessibilityState={{ disabled }}
         />
         {isSecret ? (
@@ -340,11 +344,13 @@ export function Header({
   title,
   subtitle,
   onBack,
+  right,
 }: {
   title: string;
   subtitle?: string;
   colors?: ThemeColors;
   onBack?: () => void;
+  right?: React.ReactNode;
 }) {
   return (
     <View
@@ -385,6 +391,7 @@ export function Header({
             </Text>
           ) : null}
         </View>
+        {right ? <View style={{ marginLeft: 8 }}>{right}</View> : null}
       </View>
     </View>
   );

@@ -96,6 +96,7 @@ export interface Profile {
   electrophoresis: string;
   allergies: string[];
   chronic: { nom: string; depuis?: string }[];
+  antecedents: string;
   emergencyName: string;
   emergencyPhone: string;
   fatherName: string;
@@ -125,6 +126,7 @@ export function normalizeProfile(p: Partial<Profile> & Pick<Profile, "firstName"
     electrophoresis: p.electrophoresis || "",
     allergies: p.allergies || [],
     chronic: p.chronic || [],
+    antecedents: p.antecedents || "",
     emergencyName: p.emergencyName || "",
     emergencyPhone: p.emergencyPhone || "",
     fatherName: p.fatherName || "",
@@ -158,6 +160,7 @@ export const DEMO_USER: Profile = {
     { nom: "Hypertension", depuis: "2019" },
     { nom: "Diabète T2", depuis: "2021" },
   ],
+  antecedents: "Appendicectomie 2025.",
   emergencyName: "Marie Adjovi (Épouse)",
   emergencyPhone: "+229 97 45 12 88",
   fatherName: "ADJOVI Jean",

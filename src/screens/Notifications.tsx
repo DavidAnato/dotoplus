@@ -32,6 +32,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { qk } from "../queries/keys";
 import type { RootStackParamList } from "../navigation/types";
 import { notificationTarget } from "../notifRoutes";
+import { usePullRefresh } from "../hooks/usePullRefresh";
 
 export function ConsentCard({
   req,

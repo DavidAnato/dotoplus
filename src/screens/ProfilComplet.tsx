@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LayoutChangeEvent, ScrollView, Text, View } from "react-native";
-import { Button, Card, Field, Header, PhoneField, SectionLabel } from "../ui";
+import { LayoutChangeEvent, Pressable, ScrollView, Text, View } from "react-native";
+import { Button, Card, Field, Header, PhoneField, Pill, SectionLabel } from "../ui";
 import {
   BLOOD_OPTIONS,
   C,
@@ -8,7 +8,9 @@ import {
   Profile,
   UNKNOWN_LABEL,
   darkC,
+  onBrand,
 } from "../theme";
+import { appAlert } from "../components/AppDialog";
 import { api } from "../api";
 import { BrandBackground, ScreenEnter, StaggerItem, hapticSuccess } from "../motion";
 import { StoryArt } from "../components/StoryArt";
@@ -50,6 +52,7 @@ export default function ProfilComplet({
   const colors = dark ? darkC : C;
   const scrollRef = useRef<ScrollView>(null);
   const sectionY = useRef<Partial<Record<ProfilSection, number>>>({});
+  const dirtyRef = useRef(false);
 
   const markSection =
     (key: ProfilSection) =>
@@ -81,6 +84,7 @@ export default function ProfilComplet({
     keys: [qk.me],
     refetch: [
       async () => {
+        if (dirtyRef.current) return;
         const profile = await api.me();
         if (profile) onUserUpdate?.(profile);
       },
@@ -97,6 +101,12 @@ export default function ProfilComplet({
   const [electro, setElectro] = useState(user.electrophoresis || "");
   const [electroCustom, setElectroCustom] = useState("");
   const [allergies, setAllergies] = useState((user.allergies || []).join(", "));
+  const [chronic, setChronic] = useState<{ nom: string; depuis?: string }[]>(
+    () => (user.chronic || []).filter((c) => c?.nom)
+  );
+  const [chronicNom, setChronicNom] = useState("");
+  const [chronicDepuis, setChronicDepuis] = useState("");
+  const [antecedents, setAntecedents] = useState(user.antecedents || "");
   const [fatherName, setFatherName] = useState(user.fatherName || "");
   const [motherName, setMotherName] = useState(user.motherName || "");
   const [commune, setCommune] = useState(user.addressCommune || "");
@@ -111,7 +121,6 @@ export default function ProfilComplet({
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
 
   const lastSavedRef = useRef("");
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
   const primedRef = useRef(false);
 
@@ -119,7 +128,6 @@ export default function ProfilComplet({
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
-      if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, []);
 
@@ -131,6 +139,8 @@ export default function ProfilComplet({
     setCommune(user.addressCommune || "");
     setQuartier(user.addressQuartier || "");
     setPhotoUrl(user.photoUrl || null);
+    setAntecedents(user.antecedents || "");
+    setChronic((user.chronic || []).filter((c) => c?.nom));
   }, [
     user.birthDate,
     user.birthPlace,
@@ -139,6 +149,8 @@ export default function ProfilComplet({
     user.addressCommune,
     user.addressQuartier,
     user.photoUrl,
+    user.antecedents,
+    user.chronic,
   ]);
 
   useEffect(() => {
@@ -187,6 +199,13 @@ export default function ProfilComplet({
       groupe_sanguin: blood === UNKNOWN_LABEL ? "" : blood.trim(),
       electrophorese: electroValue,
       allergies: allergyList,
+      maladies_chroniques: chronic
+        .map((c) => ({
+          nom: c.nom.trim(),
+          ...(c.depuis?.trim() ? { depuis: c.depuis.trim() } : {}),
+        }))
+        .filter((c) => c.nom),
+      antecedents: antecedents.trim(),
       contact_urgence_nom: urgenceNom.trim(),
       contact_urgence_lien: urgenceLien.trim(),
       tel_urgence: urgenceTel ? toE164Bj(urgenceTel) : "",
@@ -202,10 +221,12 @@ export default function ProfilComplet({
     return payload;
   }, [
     allergies,
+    antecedents,
     assureur,
     birth,
     birthPlace,
     blood,
+    chronic,
     commune,
     electro,
     electroCustom,
@@ -235,13 +256,13 @@ export default function ProfilComplet({
     if (urgenceTel && !isValidBjPhone(urgenceTel)) {
       setError("Téléphone d'urgence invalide.");
       setSaveStatus("error");
-      return;
+      return false;
     }
     const payload = buildPayload();
     const fingerprint = JSON.stringify(payload);
     if (fingerprint === lastSavedRef.current) {
       setSaveStatus("saved");
-      return;
+      return true;
     }
     setSaveStatus("saving");
     setError("");
@@ -257,74 +278,97 @@ export default function ProfilComplet({
         setSaveStatus("saved");
         hapticSuccess();
       }
+      return true;
     } catch (e: any) {
       if (mountedRef.current) {
         setSaveStatus("error");
         setError(e.message || "Enregistrement impossible.");
       }
+      return false;
     }
   }, [buildPayload, onUserUpdate, photoUrl, urgenceTel]);
 
-  // Auto-save différé (évite 1 requête par frappe)
-  useEffect(() => {
-    if (!primedRef.current) return;
-    setSaveStatus("pending");
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      void persist();
-    }, 1100);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [
-    allergies,
-    assureur,
-    birth,
-    birthPlace,
-    blood,
-    commune,
-    electro,
-    electroCustom,
-    fatherName,
-    motherName,
-    nom,
-    persist,
-    police,
-    prenom,
-    quartier,
-    sexe,
-    urgenceLien,
-    urgenceNom,
-    urgenceTel,
-  ]);
+  const fingerprint = JSON.stringify(buildPayload());
+  const dirty = primedRef.current && fingerprint !== lastSavedRef.current;
+  dirtyRef.current = dirty;
 
   const statusLabel =
     saveStatus === "saving"
       ? "Enregistrement…"
-      : saveStatus === "pending"
-        ? "Modifications en attente…"
-        : saveStatus === "saved"
-          ? "Enregistré automatiquement"
+      : saveStatus === "saved" && !dirty
+        ? "Modifications enregistrées"
+        : dirty
+          ? "Modifications non enregistrées"
           : saveStatus === "error"
             ? "Erreur d'enregistrement"
-            : "Les changements sont sauvegardés automatiquement";
+            : "Appuyez sur Enregistrer pour sauvegarder";
 
   const chipBtn = (label: string, active: boolean, onPress: () => void, color = C.blue) => (
     <Button key={label} title={label} outline={!active} color={color} onPress={onPress} />
   );
 
-  const leave = () => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-      debounceRef.current = null;
+  const addChronic = () => {
+    const nomMaladie = chronicNom.trim();
+    if (!nomMaladie) return;
+    if (chronic.some((c) => c.nom.toLowerCase() === nomMaladie.toLowerCase())) {
+      setChronicNom("");
+      setChronicDepuis("");
+      return;
     }
-    void persist().finally(() => onDone());
+    setChronic([...chronic, { nom: nomMaladie, depuis: chronicDepuis.trim() || undefined }]);
+    setChronicNom("");
+    setChronicDepuis("");
   };
+
+  const leave = () => {
+    if (!dirty) {
+      onDone();
+      return;
+    }
+    appAlert("Modifications non enregistrées", "Voulez-vous enregistrer avant de quitter ?", [
+      { text: "Quitter", style: "destructive", onPress: onDone },
+      {
+        text: "Enregistrer",
+        onPress: () => {
+          void persist().then((ok) => {
+            if (ok) onDone();
+          });
+        },
+      },
+      { text: "Annuler", style: "cancel" },
+    ]);
+  };
+
+  const saveLabel =
+    saveStatus === "saving" ? "…" : !dirty && saveStatus === "saved" ? "Enregistré" : "Enregistrer";
 
   return (
     <BrandBackground dark={!!dark}>
       <ScreenEnter>
-        <Header title="Mon profil" subtitle={statusLabel} onBack={leave} />
+        <Header
+          title="Mon profil"
+          subtitle={statusLabel}
+          onBack={leave}
+          right={
+            <Pressable
+              onPress={() => {
+                void persist();
+              }}
+              disabled={saveStatus === "saving" || !dirty}
+              accessibilityRole="button"
+              accessibilityLabel="Enregistrer le profil"
+              style={{
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 10,
+                backgroundColor: dirty ? "rgba(255,255,255,0.18)" : "transparent",
+                opacity: saveStatus === "saving" || dirty || saveStatus === "saved" ? 1 : 0.45,
+              }}
+            >
+              <Text style={{ color: onBrand, fontWeight: "800", fontSize: 13 }}>{saveLabel}</Text>
+            </Pressable>
+          }
+        />
         <ScrollView
           ref={scrollRef}
           contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 40 }}
@@ -345,7 +389,8 @@ export default function ProfilComplet({
             <StaggerItem index={1}>
               <Card colors={colors}>
                 <Text style={{ color: colors.muted, fontSize: 13, lineHeight: 18, marginBottom: 12 }}>
-                  Sauvegarde automatique. Les champs médicaux (sang, allergies…) peuvent rester vides.
+                  Les champs médicaux (sang, allergies, antécédents…) peuvent rester vides. Pensez à
+                  enregistrer.
                 </Text>
                 <PhotoIdentityPicker
                   photoUrl={photoUrl}
@@ -422,6 +467,64 @@ export default function ProfilComplet({
                   onChangeText={setAllergies}
                   placeholder="Ex. Pénicilline, Aspirine…"
                   colors={colors}
+                />
+                <SectionLabel color={colors.navy}>Antécédents médicaux</SectionLabel>
+                <Text style={{ color: colors.muted, fontSize: 12, marginBottom: 8, marginTop: -4 }}>
+                  Maladies chroniques, chirurgies, hospitalisations…
+                </Text>
+                {chronic.length ? (
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+                    {chronic.map((c) => (
+                      <Pressable
+                        key={c.nom}
+                        onPress={() => setChronic(chronic.filter((x) => x.nom !== c.nom))}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Retirer ${c.nom}`}
+                      >
+                        <Pill color={C.amber} bg={dark ? colors.amberSoft : C.amberSoft}>
+                          {c.depuis ? `${c.nom} — depuis ${c.depuis}` : c.nom}  ×
+                        </Pill>
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={{ color: colors.muted, fontSize: 13, marginBottom: 10 }}>
+                    Aucune maladie chronique renseignée.
+                  </Text>
+                )}
+                <Field
+                  label="Maladie chronique"
+                  value={chronicNom}
+                  onChangeText={setChronicNom}
+                  placeholder="Ex. Hypertension, diabète…"
+                  colors={colors}
+                />
+                <Field
+                  label="Depuis (année, optionnel)"
+                  value={chronicDepuis}
+                  onChangeText={setChronicDepuis}
+                  placeholder="Ex. 2019"
+                  keyboardType="number-pad"
+                  maxLength={4}
+                  colors={colors}
+                />
+                <View style={{ marginBottom: 12 }}>
+                  <Button
+                    title="Ajouter la maladie"
+                    outline
+                    compact
+                    color={C.blue}
+                    onPress={addChronic}
+                    disabled={!chronicNom.trim()}
+                  />
+                </View>
+                <Field
+                  label="Autres antécédents"
+                  value={antecedents}
+                  onChangeText={setAntecedents}
+                  placeholder="Ex. Appendicectomie 2025, asthme infantile…"
+                  colors={colors}
+                  multiline
                 />
               </Card>
             </StaggerItem>

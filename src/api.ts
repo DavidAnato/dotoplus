@@ -31,7 +31,10 @@ function mapPatient(p: any): Profile {
     bloodType: p.groupe_sanguin || "",
     electrophoresis: p.electrophorese || "",
     allergies: dossier.allergies || [],
-    chronic: dossier.maladies_chroniques || [],
+    chronic: (dossier.maladies_chroniques || []).map((c: any) =>
+      typeof c === "string" ? { nom: c } : { nom: c?.nom || "", depuis: c?.depuis || "" }
+    ).filter((c: { nom: string }) => c.nom),
+    antecedents: dossier.antecedents || "",
     emergencyName: p.contact_urgence_nom
       ? `${p.contact_urgence_nom}${p.contact_urgence_lien ? ` (${p.contact_urgence_lien})` : ""}`
       : "",

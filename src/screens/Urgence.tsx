@@ -146,9 +146,12 @@ export default function Urgence({
   const bg = dark ? "#0A0A0A" : "#F6F4F3";
   const surface = dark ? "#141414" : "#FFFFFF";
   const allergies = displayAllergies(user.allergies);
-  const chronicLabel = user.chronic?.length
-    ? user.chronic.map((c) => (c.depuis ? `${c.nom} (${c.depuis})` : c.nom)).join(" · ")
-    : "Aucune";
+  const chronicLabel = [
+    ...(user.chronic || []).map((c) => (c.depuis ? `${c.nom} (${c.depuis})` : c.nom)),
+    (user.antecedents || "").trim(),
+  ]
+    .filter(Boolean)
+    .join(" · ") || "Aucune";
 
   const callEmergency = () => {
     hapticMedium();
