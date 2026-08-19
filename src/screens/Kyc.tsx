@@ -25,12 +25,38 @@ type Kyc = {
   selfie_url?: string | null;
 };
 
-const STATUS_COPY: Record<string, { color: string; bg: string; text: string }> = {
-  brouillon: { color: "#6B3A05", bg: "#FEF0D6", text: "Brouillon" },
-  en_attente: { color: "#1E3755", bg: "#E4EEF4", text: "En attente de validation" },
-  valide: { color: "#0A4F3F", bg: "#D8F0E8", text: "Validé" },
-  refuse: { color: "#8B1E1E", bg: "#FCE8E8", text: "Refusé" },
-};
+function userStatus(statut?: string, motif?: string) {
+  if (statut === "en_attente") {
+    return {
+      color: "#1E3755",
+      bg: "#E4EEF4",
+      title: "Dossier en cours de vérification",
+      detail: "Nous vérifions vos pièces. Vous serez prévenu une fois le compte validé.",
+    };
+  }
+  if (statut === "valide") {
+    return {
+      color: "#0A4F3F",
+      bg: "#D8F0E8",
+      title: "Compte validé",
+      detail: "Votre identité a été vérifiée.",
+    };
+  }
+  if (statut === "refuse") {
+    return {
+      color: "#8B1E1E",
+      bg: "#FCE8E8",
+      title: motif ? `Dossier refusé, motif : ${motif}` : "Dossier refusé",
+      detail: null as string | null,
+    };
+  }
+  return {
+    color: "#1E3755",
+    bg: "#E4EEF4",
+    title: "Pas encore envoyé",
+    detail: "Ajoutez votre pièce d'identité, un selfie et vos informations, puis envoyez le dossier.",
+  };
+}
 
 async function pickImage(): Promise<{ uri: string; mime: string; name: string } | null> {
   const perm = await ImagePicker.requestCameraPermissionsAsync();
@@ -78,7 +104,7 @@ export default function KycScreen({
       setLieu(data.lieu_naissance || "");
       setTel(data.telephone || "");
     } catch (e: any) {
-      appAlert("KYC", e.message || "Impossible de charger le dossier.");
+      appAlert("Identité", e.message || "Impossible de charger le dossier.");
     }
   };
 
@@ -100,7 +126,7 @@ export default function KycScreen({
       });
       setKyc(data);
     } catch (e: any) {
-      appAlert("KYC", e.message || "Enregistrement impossible.");
+      appAlert("Identité", e.message || "Enregistrement impossible.");
     } finally {
       setBusy(false);
     }
@@ -114,7 +140,7 @@ export default function KycScreen({
       const data = await api.uploadKyc(kind, file.uri, file.mime, file.name);
       setKyc(data);
     } catch (e: any) {
-      appAlert("KYC", e.message || "Upload impossible.");
+      appAlert("Identité", e.message || "Upload impossible.");
     } finally {
       setBusy(false);
     }
@@ -126,31 +152,29 @@ export default function KycScreen({
       await saveInfos();
       const data = await api.submitKyc();
       setKyc(data);
-      appAlert("KYC", "Dossier envoyé. Statut : en attente de validation.");
+      appAlert("Identité", "Dossier envoyé. Il est en cours de vérification.");
       onDone?.();
     } catch (e: any) {
-      appAlert("KYC", e.message || "Envoi impossible.");
+      appAlert("Identité", e.message || "Envoi impossible.");
     } finally {
       setBusy(false);
     }
   };
 
-  const st = STATUS_COPY[kyc?.statut || "brouillon"] || STATUS_COPY.brouillon;
+  const st = userStatus(kyc?.statut, kyc?.motif_refus);
 
   return (
     <BrandBackground dark={dark}>
       <ScreenEnter>
-        <Header title="Vérification d'identité" subtitle="KYC patient" onBack={onDone} />
+        <Header title="Vérification d'identité" onBack={onDone} />
         <ScrollView contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: scrollBottom }}>
           <View style={{ backgroundColor: st.bg, borderRadius: 16, padding: 16 }}>
-            <Text style={{ color: st.color, fontWeight: "800", fontSize: 15 }}>{st.text}</Text>
-            {kyc?.statut === "refuse" && kyc.motif_refus ? (
-              <Text style={{ color: st.color, marginTop: 6, fontSize: 13 }}>{kyc.motif_refus}</Text>
-            ) : (
+            <Text style={{ color: st.color, fontWeight: "800", fontSize: 15 }}>{st.title}</Text>
+            {st.detail ? (
               <Text style={{ color: colors.muted, marginTop: 6, fontSize: 14, lineHeight: 20 }}>
-                Pièce d'identité recto/verso, selfie et informations personnelles.
+                {st.detail}
               </Text>
-            )}
+            ) : null}
           </View>
 
           {!locked ? (
@@ -216,7 +240,7 @@ export default function KycScreen({
             <Button title="Envoyer pour validation" loading={busy} color={dark ? accent : brandNavy} onPress={() => void submit()} />
           ) : kyc?.statut === "en_attente" ? (
             <Text style={{ color: colors.muted, textAlign: "center" }}>
-              Votre dossier est en attente de validation par un administrateur.
+              Votre dossier est en cours de vérification.
             </Text>
           ) : null}
         </ScrollView>

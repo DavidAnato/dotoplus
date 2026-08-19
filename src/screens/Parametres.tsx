@@ -405,8 +405,8 @@ export default function Parametres({
           <StaggerItem index={2}>
             <SettingsRow
               icon="shield-checkmark-outline"
-              label="Vérification d'identité (KYC)"
-              subtitle="Pièce, selfie et statut de validation"
+              label="Vérification d'identité"
+              subtitle="Pièce, selfie, puis envoi du dossier"
               colors={colors}
               onPress={() => navigation.getParent()?.navigate("Kyc")}
             />
