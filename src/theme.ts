@@ -4,6 +4,7 @@ export const C = {
   blue: "#3E8295",
   green: "#085041",
   emerald: "#3E8295",
+  accent: "#2BB3BC",
   lightGreen: "#E1F5EE",
   lightBlue: "#E8F2F5",
   red: "#791F1F",
@@ -42,7 +43,8 @@ export const darkC = {
 
 /** Navy marque (headers / boutons) - ne change jamais en dark mode */
 export const brandNavy = "#1E3755";
-export const brandBlue = "#3E8295";
+export const brandBlue = "#2BB3BC";
+export const accent = "#2BB3BC";
 export const onBrand = "#FFFFFF";
 
 /** Valeur partagée quand le statut médical n'est pas connu */

@@ -2,12 +2,12 @@ import React, { useRef, useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { Button, PhoneField } from "../ui";
-import { C, DEMO_USER, Profile, brandNavy, darkC } from "../theme";
+import { Button, PhoneField, AuthScreenHeader } from "../ui";
+import { C, DEMO_USER, Profile, brandNavy, darkC, accent } from "../theme";
 import { useScreenInsets } from "../safeArea";
 import { useLoginMutation, useRegisterMutation } from "../queries/hooks";
 import { api } from "../api";
-import { CardDecor, PressScale, ScreenEnter, StaggerItem } from "../motion";
+import { PressScale, ScreenEnter, StaggerItem } from "../motion";
 import { PinInput } from "../components/PinInput";
 import { IdCardScanField, IdCardOcrResult } from "../components/IdCardScanField";
 import { displayPhoneBj, isValidBjPhone, toE164Bj, nationalDigits } from "../phone";
@@ -28,72 +28,33 @@ function StepDots({
 }) {
   const colors = dark ? darkC : C;
   return (
-    <View style={{ marginBottom: 18 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 0 }}>
-        {labels.map((label, i) => {
-          const done = i < current;
-          const active = i === current;
-          return (
-            <React.Fragment key={label}>
-              {i > 0 ? (
-                <View
-                  style={{
-                    flex: 1,
-                    height: 2,
-                    backgroundColor: done || active ? C.blue : colors.border,
-                    marginHorizontal: 4,
-                  }}
-                />
-              ) : null}
-              <View style={{ alignItems: "center", minWidth: 56 }}>
-                <View
-                  style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: 14,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: done || active ? C.blue : dark ? "#1A1A1A" : "#F3F4F6",
-                    borderWidth: done || active ? 0 : 1,
-                    borderColor: colors.border,
-                  }}
-                >
-                  {done ? (
-                    <Ionicons name="checkmark" size={16} color="#fff" />
-                  ) : (
-                    <Text
-                      style={{
-                        color: active ? "#fff" : colors.muted,
-                        fontWeight: "800",
-                        fontSize: 12,
-                      }}
-                    >
-                      {i + 1}
-                    </Text>
-                  )}
-                </View>
-              </View>
-            </React.Fragment>
-          );
-        })}
-      </View>
-      <View style={{ flexDirection: "row", marginTop: 8 }}>
-        {labels.map((label, i) => (
-          <Text
-            key={label}
-            style={{
-              flex: 1,
-              textAlign: "center",
-              fontSize: 11,
-              fontWeight: i === current ? "800" : "600",
-              color: i === current ? (dark ? colors.text : brandNavy) : colors.muted,
-            }}
-            numberOfLines={1}
-          >
-            {label}
-          </Text>
-        ))}
-      </View>
+    <View style={{ marginBottom: 22, flexDirection: "row", gap: 8 }}>
+      {labels.map((label, i) => {
+        const on = i === current;
+        const done = i < current;
+        return (
+          <View key={label} style={{ flex: 1 }}>
+            <View
+              style={{
+                height: 4,
+                borderRadius: 99,
+                backgroundColor: on || done ? accent : colors.border,
+                marginBottom: 8,
+              }}
+            />
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: on ? "700" : "600",
+                color: on ? (dark ? colors.text : brandNavy) : colors.muted,
+              }}
+              numberOfLines={1}
+            >
+              {label}
+            </Text>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -111,84 +72,29 @@ function AuthHeader({
 }) {
   const colors = dark ? darkC : C;
   return (
-    <View style={{ marginBottom: 8 }}>
-      {onBack ? (
-        <PressScale
-          onPress={onBack}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 14, alignSelf: "flex-start" }}
-        >
-          <Ionicons name="chevron-back" size={22} color={dark ? colors.text : brandNavy} />
-          <Text style={{ color: dark ? colors.text : brandNavy, fontWeight: "700", fontSize: 14 }}>
-            Retour
-          </Text>
-        </PressScale>
-      ) : null}
-      <View style={{ alignItems: "center" }}>
-        <Image
-          source={require("../../assets/logo-mark.png")}
-          style={{ width: 52, height: 52, borderRadius: 14 }}
-          resizeMode="contain"
-        />
+    <AuthScreenHeader
+      colors={colors}
+      title={title}
+      subtitle={subtitle}
+      onBack={onBack}
+      brand={
         <Image
           source={require("../../assets/logo-doto.png")}
-          style={{ width: 132, height: 30, marginTop: 10 }}
+          style={{ width: 120, height: 28, marginBottom: 16 }}
           resizeMode="contain"
         />
-        <Text
-          style={{
-            color: dark ? colors.text : brandNavy,
-            fontWeight: "800",
-            fontSize: 20,
-            marginTop: 16,
-            textAlign: "center",
-          }}
-        >
-          {title}
-        </Text>
-        <Text
-          style={{
-            color: colors.muted,
-            fontSize: 14,
-            marginTop: 6,
-            textAlign: "center",
-            lineHeight: 20,
-            paddingHorizontal: 8,
-          }}
-        >
-          {subtitle}
-        </Text>
-      </View>
-    </View>
+      }
+    />
   );
 }
 
 function Surface({
-  dark,
   children,
 }: {
   dark?: boolean;
   children: React.ReactNode;
 }) {
-  const colors = dark ? darkC : C;
-  return (
-    <View
-      style={{
-        backgroundColor: colors.white,
-        borderRadius: 22,
-        padding: 18,
-        borderWidth: 1,
-        borderColor: colors.border,
-        shadowColor: "#1E3755",
-        shadowOpacity: dark ? 0 : 0.06,
-        shadowRadius: 14,
-        elevation: dark ? 0 : 2,
-        overflow: "hidden",
-      }}
-    >
-      <CardDecor variant="calm" dark={!!dark} />
-      {children}
-    </View>
-  );
+  return <View>{children}</View>;
 }
 
 export default function Login({
@@ -201,7 +107,7 @@ export default function Login({
   dark?: boolean;
 }) {
   const colors = dark ? darkC : C;
-  const { headerPad, scrollBottom } = useScreenInsets();
+  const { scrollBottom } = useScreenInsets();
   const [flow, setFlow] = useState<Flow>("welcome");
   const [loginStep, setLoginStep] = useState<LoginStep>("phone");
   const [registerStep, setRegisterStep] = useState<RegisterStep>("card");
@@ -336,7 +242,7 @@ export default function Login({
 
   const grad = dark
     ? ([colors.bg, "#121212", colors.white] as const)
-    : (["#E8F2F5", "#F7FAFB", "#FFFFFF"] as const);
+    : (["#F4FBFC", "#F7FAFB", "#FFFFFF"] as const);
 
   const startDemo = () => (onDemo ? onDemo() : onLogin(DEMO_USER));
 
@@ -347,8 +253,6 @@ export default function Login({
         <ScreenEnter>
           <ScrollView
             contentContainerStyle={{
-              padding: 24,
-              paddingTop: headerPad + 24,
               paddingBottom: scrollBottom,
               flexGrow: 1,
               justifyContent: "center",
@@ -356,137 +260,34 @@ export default function Login({
             keyboardShouldPersistTaps="handled"
           >
             <StaggerItem index={0}>
-              <View style={{ alignItems: "center", marginBottom: 28 }}>
-                <Image
-                  source={require("../../assets/logo-mark.png")}
-                  style={{ width: 72, height: 72, borderRadius: 20 }}
-                  resizeMode="contain"
-                />
-                <Image
-                  source={require("../../assets/logo-doto.png")}
-                  style={{ width: 160, height: 36, marginTop: 14 }}
-                  resizeMode="contain"
-                />
-                <Text
-                  style={{
-                    color: dark ? colors.text : brandNavy,
-                    fontWeight: "800",
-                    fontSize: 22,
-                    marginTop: 20,
-                    textAlign: "center",
-                  }}
-                >
-                  Votre santé, simplifiée
-                </Text>
-                <Text
-                  style={{
-                    color: colors.muted,
-                    fontSize: 15,
-                    marginTop: 8,
-                    textAlign: "center",
-                    lineHeight: 22,
-                    paddingHorizontal: 12,
-                  }}
-                >
-                  Dossier médical, DotoCard et urgences - accessibles en un scan.
-                </Text>
-              </View>
+              <AuthScreenHeader
+                colors={colors}
+                title="Votre santé, simplifiée"
+                subtitle="Dossier médical, DotoCard et urgences accessibles en un scan."
+                brand={
+                  <Image
+                    source={require("../../assets/logo-doto.png")}
+                    style={{ width: 148, height: 34, marginBottom: 18 }}
+                    resizeMode="contain"
+                  />
+                }
+              />
             </StaggerItem>
 
             <StaggerItem index={1}>
-              <Surface dark={dark}>
-                <Text
-                  style={{
-                    color: colors.muted,
-                    fontSize: 12,
-                    fontWeight: "700",
-                    letterSpacing: 0.4,
-                    textTransform: "uppercase",
-                    marginBottom: 14,
-                    textAlign: "center",
-                  }}
-                >
-                  Comment souhaitez-vous continuer ?
-                </Text>
-
-                <Pressable
-                  onPress={goLogin}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 14,
-                    padding: 16,
-                    borderRadius: 16,
-                    backgroundColor: dark ? "#1C2A2E" : "#F0F7FA",
-                    borderWidth: 1.5,
-                    borderColor: C.blue + "55",
-                    marginBottom: 12,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 14,
-                      backgroundColor: C.blue,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Ionicons name="log-in-outline" size={24} color="#fff" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.text, fontWeight: "800", fontSize: 16 }}>
-                      Se connecter
-                    </Text>
-                    <Text style={{ color: colors.muted, fontSize: 13, marginTop: 2 }}>
-                      J’ai déjà un compte DOTO+
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={C.blue} />
+              <View style={{ paddingHorizontal: 24 }}>
+                <Button title="Se connecter" onPress={goLogin} color={dark ? accent : brandNavy} />
+                <Pressable onPress={goRegister} style={{ marginTop: 18, alignItems: "center" }}>
+                  <Text style={{ color: colors.muted, fontSize: 14 }}>
+                    Nouveau ?{" "}
+                    <Text style={{ color: accent, fontWeight: "700" }}>Créer un compte</Text>
+                  </Text>
                 </Pressable>
-
-                <Pressable
-                  onPress={goRegister}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 14,
-                    padding: 16,
-                    borderRadius: 16,
-                    backgroundColor: dark ? "#141A1C" : "#FAFBFC",
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                    marginBottom: 8,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 14,
-                      backgroundColor: dark ? "#1A1A1A" : "#EEF1F4",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Ionicons name="person-add-outline" size={22} color={dark ? C.blue : brandNavy} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.text, fontWeight: "800", fontSize: 16 }}>
-                      Créer un compte
-                    </Text>
-                    <Text style={{ color: colors.muted, fontSize: 13, marginTop: 2 }}>
-                      Nouveau · CIP ou carte CEDEAO
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.grey} />
-                </Pressable>
-              </Surface>
+              </View>
             </StaggerItem>
 
             <StaggerItem index={2}>
-              <PressScale onPress={startDemo} style={{ marginTop: 22, alignItems: "center" }}>
+              <PressScale onPress={startDemo} style={{ marginTop: 28, alignItems: "center" }}>
                 <Text style={{ color: colors.muted, fontSize: 13, fontWeight: "600" }}>
                   Explorer en démo (hors ligne)
                 </Text>
@@ -495,12 +296,12 @@ export default function Login({
                 style={{
                   textAlign: "center",
                   color: colors.grey,
-                  fontSize: 11,
+                  fontSize: 12,
                   marginTop: 18,
                   lineHeight: 16,
                 }}
               >
-                Connexion sécurisée par SMS · aucun mot de passe
+                Connexion sécurisée par SMS, sans mot de passe
               </Text>
             </StaggerItem>
           </ScrollView>
@@ -516,7 +317,7 @@ export default function Login({
       <LinearGradient colors={[...grad]} style={{ flex: 1 }}>
         <ScreenEnter>
           <ScrollView
-            contentContainerStyle={{ padding: 24, paddingTop: headerPad + 16, paddingBottom: scrollBottom }}
+            contentContainerStyle={{ paddingBottom: scrollBottom }}
             keyboardShouldPersistTaps="handled"
           >
             <AuthHeader
@@ -530,6 +331,7 @@ export default function Login({
               }
             />
 
+            <View style={{ paddingHorizontal: 24 }}>
             <Surface dark={dark}>
               <StepDots labels={["Téléphone", "Code SMS"]} current={stepIndex} dark={dark} />
 
@@ -589,16 +391,17 @@ export default function Login({
                     disabled={busy}
                     style={{ marginTop: 14, alignItems: "center", opacity: busy ? 0.45 : 1 }}
                   >
-                    <Text style={{ color: C.blue, fontWeight: "700", fontSize: 13 }}>Renvoyer le code</Text>
+                    <Text style={{ color: accent, fontWeight: "700", fontSize: 13 }}>Renvoyer le code</Text>
                   </PressScale>
                 </>
               )}
             </Surface>
+            </View>
 
             <PressScale onPress={goRegister} style={{ marginTop: 20, alignItems: "center" }}>
               <Text style={{ color: colors.muted, fontSize: 13 }}>
                 Pas encore de compte ?{" "}
-                <Text style={{ color: C.blue, fontWeight: "800" }}>S’inscrire</Text>
+                <Text style={{ color: accent, fontWeight: "700" }}>S’inscrire</Text>
               </Text>
             </PressScale>
           </ScrollView>
@@ -641,7 +444,7 @@ export default function Login({
     <LinearGradient colors={[...grad]} style={{ flex: 1 }}>
       <ScreenEnter>
         <ScrollView
-          contentContainerStyle={{ padding: 24, paddingTop: headerPad + 16, paddingBottom: scrollBottom }}
+          contentContainerStyle={{ paddingBottom: scrollBottom }}
           keyboardShouldPersistTaps="handled"
         >
           <AuthHeader
@@ -651,6 +454,7 @@ export default function Login({
             subtitle={regTitles[registerStep].subtitle}
           />
 
+          <View style={{ paddingHorizontal: 24 }}>
           <Surface dark={dark}>
             <StepDots labels={["Carte", "Tél.", "SMS"]} current={regIndex} dark={dark} />
 
@@ -788,16 +592,17 @@ export default function Login({
                   disabled={busy}
                   style={{ marginTop: 14, alignItems: "center", opacity: busy ? 0.45 : 1 }}
                 >
-                  <Text style={{ color: C.blue, fontWeight: "700", fontSize: 13 }}>Renvoyer le code</Text>
+                  <Text style={{ color: accent, fontWeight: "700", fontSize: 13 }}>Renvoyer le code</Text>
                 </PressScale>
               </>
             ) : null}
           </Surface>
+          </View>
 
           <PressScale onPress={goLogin} style={{ marginTop: 20, alignItems: "center" }}>
             <Text style={{ color: colors.muted, fontSize: 13 }}>
               Déjà inscrit ?{" "}
-              <Text style={{ color: C.blue, fontWeight: "800" }}>Se connecter</Text>
+              <Text style={{ color: accent, fontWeight: "700" }}>Se connecter</Text>
             </Text>
           </PressScale>
         </ScrollView>

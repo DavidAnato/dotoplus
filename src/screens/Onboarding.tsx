@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { Button } from "../ui";
-import { C, darkC } from "../theme";
+import { C, darkC, accent, brandNavy } from "../theme";
 import { IconCluster } from "../components/StoryArt";
 import type { StoryIcon } from "../components/StoryArt";
+import { useScreenInsets } from "../safeArea";
 
 const SLIDES: {
   title: string;
@@ -19,7 +20,7 @@ const SLIDES: {
     title: "DOTO+",
     subtitle: "Votre santé, toujours avec vous",
     desc: "Accédez à votre dossier médical complet depuis votre smartphone, partout au Bénin.",
-    accent: C.blue,
+    accent: accent,
     bg: C.lightBlue,
     bgDark: "#1C1C1C",
     logo: require("../../assets/logo-mark.png") as number,
@@ -33,7 +34,7 @@ const SLIDES: {
     title: "Un seul compte pour tout",
     subtitle: "Connectez-vous avec votre téléphone",
     desc: "Votre numéro et un code SMS donnent accès à l'ensemble de votre historique médical.",
-    accent: C.blue,
+    accent: accent,
     bg: C.lightBlue,
     bgDark: "#1C1C1C",
     logo: require("../../assets/logo-doto.png") as number,
@@ -67,6 +68,7 @@ export default function Onboarding({
   dark?: boolean;
 }) {
   const colors = dark ? darkC : C;
+  const { headerPad, scrollBottom } = useScreenInsets();
   const [i, setI] = useState(0);
   const slide = SLIDES[i];
   return (
@@ -75,18 +77,19 @@ export default function Onboarding({
         <TouchableOpacity
           onPress={onDone}
           hitSlop={12}
-          style={{ position: "absolute", right: 20, top: 12, zIndex: 10, padding: 8 }}
+          style={{ position: "absolute", right: 16, top: headerPad, zIndex: 10, padding: 10 }}
         >
-          <Text style={{ color: C.blue, fontWeight: "600" }}>Passer</Text>
+          <Text style={{ color: accent, fontWeight: "600" }}>Passer</Text>
         </TouchableOpacity>
       ) : null}
       <View
         style={{
-          height: "52%",
-          backgroundColor: dark ? slide.bgDark : slide.bg,
+          height: "50%",
+          backgroundColor: dark ? slide.bgDark : "#E8F7F8",
           alignItems: "center",
           justifyContent: "center",
           overflow: "hidden",
+          paddingTop: headerPad,
         }}
       >
         {/* Formes décoratives */}
@@ -140,18 +143,18 @@ export default function Onboarding({
           <Image source={slide.logo} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
         </View>
       </View>
-      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24, gap: 8 }}>
-        <Text style={{ fontSize: 26, fontWeight: "800", color: dark ? colors.text : C.navy }}>
+      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 28, gap: 10 }}>
+        <Text style={{ fontSize: 28, fontWeight: "800", letterSpacing: -0.5, color: dark ? colors.text : brandNavy }}>
           {slide.title}
         </Text>
-        <Text style={{ fontSize: 16, fontWeight: "700", color: slide.accent }}>
+        <Text style={{ fontSize: 16, fontWeight: "600", color: slide.accent }}>
           {slide.subtitle}
         </Text>
-        <Text style={{ fontSize: 14, color: colors.muted, lineHeight: 21 }}>
+        <Text style={{ fontSize: 15, color: colors.muted, lineHeight: 22 }}>
           {slide.desc}
         </Text>
       </View>
-      <View style={{ paddingHorizontal: 24, paddingBottom: 24, gap: 16 }}>
+      <View style={{ paddingHorizontal: 24, paddingBottom: Math.max(scrollBottom, 24), gap: 16 }}>
         <View style={{ flexDirection: "row", justifyContent: "center", gap: 8 }}>
           {SLIDES.map((_, idx) => (
             <View
@@ -160,12 +163,16 @@ export default function Onboarding({
                 width: idx === i ? 24 : 8,
                 height: 8,
                 borderRadius: 4,
-                backgroundColor: idx === i ? C.blue : colors.border,
+                backgroundColor: idx === i ? accent : colors.border,
               }}
             />
           ))}
         </View>
-        <Button title={i < 2 ? "Suivant" : "Commencer"} onPress={() => (i < 2 ? setI(i + 1) : onDone())} />
+        <Button
+          title={i < 2 ? "Suivant" : "Commencer"}
+          color={dark ? accent : brandNavy}
+          onPress={() => (i < 2 ? setI(i + 1) : onDone())}
+        />
       </View>
     </View>
   );

@@ -10,7 +10,7 @@ import {
   StyleProp,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { C, brandNavy, onBrand } from "./theme";
+import { C, brandNavy, onBrand, accent } from "./theme";
 import { PressScale, IconBadge, CardDecor } from "./motion";
 import { BJ_DIAL, formatNational, nationalDigits, toE164Bj, toE164BjRaw } from "./phone";
 import { useScreenInsets } from "./safeArea";
@@ -196,6 +196,7 @@ export function Field({
   multiline?: boolean;
 }) {
   const [revealed, setRevealed] = useState(false);
+  const [focused, setFocused] = useState(false);
   const isSecret = !!secureTextEntry;
   const labelColor = colors.navy === C.navy ? C.navy : colors.text;
   const inputBg = disabled
@@ -214,10 +215,16 @@ export function Field({
           style={[
             s.input,
             {
-              borderColor: disabled ? (colors.bg === C.bg ? "#D0D7DE" : "#2A2A2A") : colors.border,
+              borderColor: disabled
+                ? colors.bg === C.bg
+                  ? "#D0D7DE"
+                  : "#2A2A2A"
+                : focused
+                  ? accent
+                  : colors.border,
               backgroundColor: inputBg,
               color: disabled ? colors.muted : colors.text,
-              paddingRight: isSecret ? 48 : 14,
+              paddingRight: isSecret ? 48 : 16,
             },
             multiline ? { minHeight: 88, textAlignVertical: "top" as const } : null,
           ]}
@@ -232,6 +239,8 @@ export function Field({
           editable={!disabled}
           multiline={multiline}
           accessibilityState={{ disabled }}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
         />
         {isSecret ? (
           <Pressable
@@ -285,6 +294,7 @@ export function PhoneField({
   const local = formatNational(nationalDigits(value));
   const dialColor = darkish ? "#E5E7EB" : brandNavy;
   const dialBg = darkish ? "#1F1F1F" : colors.lightBlue;
+  const [focused, setFocused] = useState(false);
 
   return (
     <View style={{ marginBottom: space.md, opacity: disabled ? 0.72 : 1 }}>
@@ -295,9 +305,16 @@ export function PhoneField({
           alignItems: "stretch",
           borderWidth: 1.5,
           borderRadius: 14,
-          borderColor: disabled ? (colors.bg === C.bg ? "#D0D7DE" : "#2A2A2A") : colors.border,
+          borderColor: disabled
+            ? colors.bg === C.bg
+              ? "#D0D7DE"
+              : "#2A2A2A"
+            : focused
+              ? accent
+              : colors.border,
           backgroundColor: inputBg,
           overflow: "hidden",
+          minHeight: 52,
         }}
       >
         <View
@@ -334,8 +351,60 @@ export function PhoneField({
           editable={!disabled}
           accessibilityLabel={`${label}, indicatif ${BJ_DIAL}`}
           accessibilityState={{ disabled }}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
         />
       </View>
+    </View>
+  );
+}
+
+/** Header clair pour les flux d’auth (pas collé sous la status bar). */
+export function AuthScreenHeader({
+  title,
+  subtitle,
+  onBack,
+  colors = C,
+  brand,
+}: {
+  title: string;
+  subtitle?: string;
+  onBack?: () => void;
+  colors?: ThemeColors;
+  brand?: React.ReactNode;
+}) {
+  const { headerPad } = useScreenInsets();
+  const darkish = colors.bg === "#0A0A0A" || colors.white === "#161616";
+  const titleColor = darkish ? colors.text : brandNavy;
+  return (
+    <View style={{ paddingTop: headerPad + 10, paddingHorizontal: 24, marginBottom: 8 }}>
+      {onBack ? (
+        <Pressable
+          onPress={onBack}
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+          hitSlop={10}
+          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 18, alignSelf: "flex-start" }}
+        >
+          <Ionicons name="chevron-back" size={22} color={titleColor} />
+          <Text style={{ color: titleColor, fontWeight: "700", fontSize: 14 }}>Retour</Text>
+        </Pressable>
+      ) : null}
+      {brand}
+      <Text
+        style={{
+          color: titleColor,
+          fontSize: 26,
+          fontWeight: "800",
+          letterSpacing: -0.5,
+          lineHeight: 32,
+        }}
+      >
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text style={{ color: colors.muted, fontSize: 15, lineHeight: 22, marginTop: 8 }}>{subtitle}</Text>
+      ) : null}
     </View>
   );
 }
@@ -446,18 +515,18 @@ const s = StyleSheet.create({
     gap: 8,
   },
   fieldLabel: {
-    fontSize: 11,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.55,
-    marginBottom: 6,
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: 0,
+    marginBottom: 8,
   },
   input: {
     borderWidth: 1.5,
     borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    fontSize: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+    fontSize: 16,
+    minHeight: 52,
   },
   eyeBtn: {
     position: "absolute",

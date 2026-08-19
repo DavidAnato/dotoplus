@@ -3,7 +3,7 @@ import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { Button, Field, Header, PhoneField } from "../ui";
-import { C, darkC } from "../theme";
+import { C, darkC, accent, brandNavy } from "../theme";
 import { BrandBackground, ScreenEnter } from "../motion";
 import { IdCardScanField, IdCardOcrResult } from "../components/IdCardScanField";
 import { api } from "../api";
@@ -141,13 +141,13 @@ export default function KycScreen({
     <BrandBackground dark={dark}>
       <ScreenEnter>
         <Header title="Vérification d'identité" subtitle="KYC patient" onBack={onDone} />
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: scrollBottom }}>
-          <View style={{ backgroundColor: st.bg, borderRadius: 14, padding: 14 }}>
-            <Text style={{ color: st.color, fontWeight: "800" }}>{st.text}</Text>
+        <ScrollView contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: scrollBottom }}>
+          <View style={{ backgroundColor: st.bg, borderRadius: 16, padding: 16 }}>
+            <Text style={{ color: st.color, fontWeight: "800", fontSize: 15 }}>{st.text}</Text>
             {kyc?.statut === "refuse" && kyc.motif_refus ? (
               <Text style={{ color: st.color, marginTop: 6, fontSize: 13 }}>{kyc.motif_refus}</Text>
             ) : (
-              <Text style={{ color: colors.muted, marginTop: 6, fontSize: 13 }}>
+              <Text style={{ color: colors.muted, marginTop: 6, fontSize: 14, lineHeight: 20 }}>
                 Pièce d'identité recto/verso, selfie et informations personnelles.
               </Text>
             )}
@@ -213,7 +213,7 @@ export default function KycScreen({
           })}
 
           {!locked ? (
-            <Button title="Envoyer pour validation" loading={busy} color={C.green} onPress={() => void submit()} />
+            <Button title="Envoyer pour validation" loading={busy} color={dark ? accent : brandNavy} onPress={() => void submit()} />
           ) : kyc?.statut === "en_attente" ? (
             <Text style={{ color: colors.muted, textAlign: "center" }}>
               Votre dossier est en attente de validation par un administrateur.
