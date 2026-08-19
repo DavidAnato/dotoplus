@@ -1,4 +1,4 @@
-/** Indicatif Bénin — préfixe verrouillé côté UI. */
+/** Indicatif Bénin - préfixe verrouillé côté UI. */
 export const BJ_DIAL = "+229";
 export const BJ_CC_DIGITS = "229";
 /** Préfixe national actuel (tous les numéros BJ commencent par 01). */
@@ -34,7 +34,7 @@ export function ensureBj01(raw: string): string {
 
 /**
  * Pendant la frappe : préfixe 01 dès que l’utilisateur n’est pas en train
- * de saisir « 01… » (ex. premier chiffre 2–9 → 01 collé tout de suite).
+ * de saisir « 01… » (ex. premier chiffre 2-9 → 01 collé tout de suite).
  * Seul « 0 » est laissé en attente (peut devenir 01).
  */
 export function normalizeBjWhileTyping(raw: string): string {
@@ -48,7 +48,7 @@ export function normalizeBjWhileTyping(raw: string): string {
     d = d.replace(/^0+/, "");
     if (!d) return "0";
   }
-  // Commence par 1–9 (ou suite après strip) → 01 immédiat
+  // Commence par 1-9 (ou suite après strip) → 01 immédiat
   if (!d.startsWith(BJ_MOBILE_PREFIX)) d = BJ_MOBILE_PREFIX + d;
   return d.slice(0, 10);
 }
@@ -82,7 +82,7 @@ export function toE164Bj(raw: string): string {
 }
 
 /** Affichage carte / profil : toujours avec +229. */
-export function displayPhoneBj(raw: string, fallback = "—"): string {
+export function displayPhoneBj(raw: string, fallback = "-"): string {
   const nat = ensureBj01(raw) || nationalDigits(raw);
   if (!nat) return fallback;
   return `${BJ_DIAL} ${formatNational(nat)}`;

@@ -168,7 +168,7 @@ export function CriticalMedicalCard({
   );
 }
 
-/** Bandeau compact Home (hero navy) — 3 cellules lisibles. */
+/** Bandeau compact Home (hero navy) - 3 cellules lisibles. */
 export function CriticalHeroStrip({
   user,
 }: {

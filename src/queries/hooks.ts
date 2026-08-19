@@ -237,6 +237,7 @@ export function useHistorique(enabled = true) {
         consultations: [] as any[],
         ordonnances: [] as any[],
         examens: [] as any[],
+        bons_examen: [] as any[],
       })),
     staleTime: 30_000,
   });

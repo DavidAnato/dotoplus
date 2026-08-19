@@ -1,6 +1,6 @@
 /**
  * File d'actions hors-ligne (FIFO) + replay à la reconnexion.
- * Conflit : last-write / timestamp — le serveur renvoie 409 si `client_updated_at` est stale.
+ * Conflit : last-write / timestamp - le serveur renvoie 409 si `client_updated_at` est stale.
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 

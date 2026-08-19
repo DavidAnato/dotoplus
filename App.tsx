@@ -185,7 +185,7 @@ function AppInner() {
         wasBackground.current = false;
         backgroundAt.current = null;
       } else if (s === "background") {
-        // Ignorer "inactive" (transitions iOS / multitâche) — trop agressif
+        // Ignorer "inactive" (transitions iOS / multitâche) - trop agressif
         wasBackground.current = true;
         backgroundAt.current = Date.now();
       }
@@ -243,7 +243,7 @@ function AppInner() {
     setPinBusy(true);
     setPinError("");
     try {
-      // Local d'abord (SecureStore) — déverrouillage instantané
+      // Local d'abord (SecureStore) - déverrouillage instantané
       if (await storage.matchLocalPin(pin)) {
         setLocked(false);
         void api.verifyPin(pin).catch(() => {});
@@ -294,11 +294,7 @@ function AppInner() {
   };
 
   if (phase === "boot") {
-    return (
-      <SafeAreaProvider>
-        <BootView />
-      </SafeAreaProvider>
-    );
+    return <BootView />;
   }
 
   const barBg = brandNavy;
@@ -306,47 +302,45 @@ function AppInner() {
   const urgenceOk = user.urgenceWhenLocked !== false && !needsPinSetup;
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: barBg }} edges={["top"]}>
-        <StatusBar barStyle="light-content" backgroundColor={barBg} />
-        <View style={{ flex: 1, backgroundColor: dark ? "#0A0A0A" : C.bg }}>
-          <RootNavigator authInitial={authInitial} />
-          <AppDialogHost dark={dark} />
-          <Modal visible={showLock} animationType="fade" presentationStyle="fullScreen">
-            <SafeAreaView style={{ flex: 1, backgroundColor: dark ? "#0A0A0A" : "#F0F4F7" }}>
-              {urgenceBypass ? (
-                <Urgence
-                  dark={dark}
-                  user={user}
-                  onBack={() => setUrgenceBypass(false)}
-                />
-              ) : (
-                <PinLockScreen
-                  mode={needsPinSetup ? "setup" : "unlock"}
-                  title={needsPinSetup ? "Configurer le PIN" : "DOTO+ verrouillé"}
-                  subtitle={
-                    needsPinSetup
-                      ? "Code à 4 chiffres pour les prochaines ouvertures"
-                      : "Entrez votre code PIN pour continuer"
-                  }
-                  dark={dark}
-                  error={pinError}
-                  loading={pinBusy}
-                  bioAvailable={!needsPinSetup && bioAvailable}
-                  onBio={needsPinSetup ? undefined : unlockWithBio}
-                  onSubmit={needsPinSetup ? setupPin : unlockWithPin}
-                  onUrgence={
-                    urgenceOk
-                      ? () => setUrgenceBypass(true)
-                      : undefined
-                  }
-                />
-              )}
-            </SafeAreaView>
-          </Modal>
-        </View>
-      </SafeAreaView>
-    </SafeAreaProvider>
+    <View style={{ flex: 1, backgroundColor: barBg }}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <View style={{ flex: 1, backgroundColor: dark ? "#0A0A0A" : C.bg }}>
+        <RootNavigator authInitial={authInitial} />
+        <AppDialogHost dark={dark} />
+        <Modal visible={showLock} animationType="fade" presentationStyle="fullScreen">
+          <SafeAreaView style={{ flex: 1, backgroundColor: dark ? "#0A0A0A" : "#F0F4F7" }} edges={["top", "bottom"]}>
+            {urgenceBypass ? (
+              <Urgence
+                dark={dark}
+                user={user}
+                onBack={() => setUrgenceBypass(false)}
+              />
+            ) : (
+              <PinLockScreen
+                mode={needsPinSetup ? "setup" : "unlock"}
+                title={needsPinSetup ? "Configurer le PIN" : "DOTO+ verrouillé"}
+                subtitle={
+                  needsPinSetup
+                    ? "Code à 4 chiffres pour les prochaines ouvertures"
+                    : "Entrez votre code PIN pour continuer"
+                }
+                dark={dark}
+                error={pinError}
+                loading={pinBusy}
+                bioAvailable={!needsPinSetup && bioAvailable}
+                onBio={needsPinSetup ? undefined : unlockWithBio}
+                onSubmit={needsPinSetup ? setupPin : unlockWithPin}
+                onUrgence={
+                  urgenceOk
+                    ? () => setUrgenceBypass(true)
+                    : undefined
+                }
+              />
+            )}
+          </SafeAreaView>
+        </Modal>
+      </View>
+    </View>
   );
 }
 
@@ -370,7 +364,7 @@ class BootErrorBoundary extends React.Component<
       return (
         <View style={{ flex: 1, backgroundColor: brandNavy, padding: 24, justifyContent: "center" }}>
           <Text style={{ color: "#fff", fontWeight: "800", fontSize: 18, marginBottom: 8 }}>
-            DOTO+ — erreur au démarrage
+            DOTO+ - erreur au démarrage
           </Text>
           <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, lineHeight: 20 }}>
             {this.state.error.message || String(this.state.error)}
@@ -385,11 +379,13 @@ class BootErrorBoundary extends React.Component<
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <BootErrorBoundary>
-        <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
-          <AppInner />
-        </PersistQueryClientProvider>
-      </BootErrorBoundary>
+      <SafeAreaProvider>
+        <BootErrorBoundary>
+          <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
+            <AppInner />
+          </PersistQueryClientProvider>
+        </BootErrorBoundary>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

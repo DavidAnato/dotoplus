@@ -30,7 +30,7 @@ type Props = {
 };
 
 function fmtBirth(raw?: string) {
-  if (!raw) return "—";
+  if (!raw) return "-";
   const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m) return `${m[3]}/${m[2]}/${m[1]}`;
   return raw;
@@ -41,7 +41,7 @@ function Field({ label, value, bold = true }: { label: string; value: string; bo
     <View style={{ marginBottom: 5 }}>
       <Text style={s.fieldLabel}>{label}</Text>
       <Text style={[s.fieldValue, bold && { fontWeight: "800" }]} numberOfLines={1}>
-        {value || "—"}
+        {value || "-"}
       </Text>
     </View>
   );
@@ -62,12 +62,12 @@ function CardFront({ user, token, cardId }: Props) {
             <Text style={s.brand}>
               Doto<Text style={{ color: "#5BA3B5" }}>Card</Text>
             </Text>
-            <Text style={s.cardNo}>Carte N°: {cardId ?? "—"}</Text>
+            <Text style={s.cardNo}>Carte N°: {cardId ?? "-"}</Text>
           </View>
           <View style={{ alignItems: "flex-end" }}>
             <Text style={s.fieldLabel}>NPI</Text>
             <Text style={[s.fieldValue, { fontSize: 10, fontFamily: "monospace" }]}>
-              {user.npi || "—"}
+              {user.npi || "-"}
             </Text>
           </View>
         </View>
@@ -83,9 +83,9 @@ function CardFront({ user, token, cardId }: Props) {
 
           <View style={{ flex: 1, paddingHorizontal: 8 }}>
             <Field label="Nom" value={(user.lastName || "").toUpperCase()} />
-            <Field label="Prénoms" value={user.firstName || "—"} />
+            <Field label="Prénoms" value={user.firstName || "-"} />
             <Field label="Date de naissance" value={fmtBirth(user.birthDate)} />
-            <Field label="Lieu de naissance" value={user.birthPlace || "—"} bold={false} />
+            <Field label="Lieu de naissance" value={user.birthPlace || "-"} bold={false} />
           </View>
 
           <View style={{ alignItems: "center", width: 100 }}>
@@ -100,7 +100,7 @@ function CardFront({ user, token, cardId }: Props) {
             )}
             <Text style={[s.fieldLabel, { marginTop: 4 }]}>Num. tél</Text>
             <Text style={[s.fieldValue, { fontSize: 8 }]} numberOfLines={2}>
-              {displayPhoneBj(user.phone, "—")}
+              {displayPhoneBj(user.phone, "-")}
             </Text>
           </View>
         </View>
@@ -109,7 +109,7 @@ function CardFront({ user, token, cardId }: Props) {
       <View style={s.emergency}>
         <View style={s.emCol}>
           <Text style={s.emLabel}>Groupe sanguin</Text>
-          <Text style={s.emValue}>{user.bloodType || "—"}</Text>
+          <Text style={s.emValue}>{user.bloodType || "-"}</Text>
         </View>
         <View style={[s.emCol, { flex: 1.4 }]}>
           <Text style={s.emLabel}>Allergies connues</Text>
@@ -120,7 +120,7 @@ function CardFront({ user, token, cardId }: Props) {
         <View style={s.emCol}>
           <Text style={s.emLabel}>Urgence</Text>
           <Text style={[s.emValue, { fontSize: 9 }]} numberOfLines={2}>
-            {displayPhoneBj(user.emergencyPhone, "—")}
+            {displayPhoneBj(user.emergencyPhone, "-")}
           </Text>
         </View>
       </View>
@@ -139,13 +139,13 @@ function CardBack({ user, expiry }: Props) {
         <View style={{ flexDirection: "row", gap: 12 }}>
           <View style={{ flex: 1 }}>
             <Text style={s.sectionTitle}>Filiation</Text>
-            <Text style={s.metaLine}>Père: {user.fatherName || "—"}</Text>
-            <Text style={s.metaLine}>Mère: {user.motherName || "—"}</Text>
+            <Text style={s.metaLine}>Père: {user.fatherName || "-"}</Text>
+            <Text style={s.metaLine}>Mère: {user.motherName || "-"}</Text>
           </View>
           <View style={{ flex: 1 }}>
             <Text style={s.sectionTitle}>Adresse de résidence</Text>
-            <Text style={s.metaLine}>Com. {user.addressCommune || "—"}</Text>
-            <Text style={s.metaLine}>Qtr: {user.addressQuartier || "—"}</Text>
+            <Text style={s.metaLine}>Com. {user.addressCommune || "-"}</Text>
+            <Text style={s.metaLine}>Qtr: {user.addressQuartier || "-"}</Text>
           </View>
         </View>
       </View>
@@ -159,10 +159,10 @@ function CardBack({ user, expiry }: Props) {
             {user.insurer}
           </Text>
           <Text style={s.insMeta} numberOfLines={1}>
-            Police: {user.policyNumber || "—"}
+            Police: {user.policyNumber || "-"}
           </Text>
           <View style={s.pills}>
-            {["Consult. —", "Soins. —", "Pharma. —"].map((t) => (
+            {["Consult. -", "Soins. -", "Pharma. -"].map((t) => (
               <View key={t} style={s.pill}>
                 <Text style={s.pillText}>{t}</Text>
               </View>
@@ -182,7 +182,7 @@ function CardBack({ user, expiry }: Props) {
           Cette carte est strictement personnelle, non-transférable et demeure la propriété de
           l'émetteur.*
         </Text>
-        <Text style={s.validUntil}>Valable jusqu'au : {expiry || "—"}</Text>
+        <Text style={s.validUntil}>Valable jusqu'au : {expiry || "-"}</Text>
       </View>
     </View>
   );

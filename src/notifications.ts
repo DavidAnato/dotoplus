@@ -267,14 +267,14 @@ export function usePatientSSE(enabled: boolean) {
   }, [enabled, online, qc, setUnread]);
 }
 
-/** Enregistrement push Expo — no-op si module absent / simulateur / Expo Go Android. */
+/** Enregistrement push Expo - no-op si module absent / simulateur / Expo Go Android. */
 export async function registerPushToken(app = "dotoplus"): Promise<string | null> {
   try {
     // SDK 53+ : import d'expo-notifications plante sur Expo Go Android
     // (PushTokenAutoRegistration.throw). Skip avant tout import.
     const { isRunningInExpoGo } = await import("expo");
     if (isRunningInExpoGo() && Platform.OS === "android") {
-      console.log("[push] Expo Go Android — push distant désactivé (SDK 53+)");
+      console.log("[push] Expo Go Android - push distant désactivé (SDK 53+)");
       return null;
     }
 
@@ -292,7 +292,7 @@ export async function registerPushToken(app = "dotoplus"): Promise<string | null
     });
 
     if (Device && !Device.isDevice && Platform.OS !== "web") {
-      console.log("[push] simulateur — enregistrement ignoré");
+      console.log("[push] simulateur - enregistrement ignoré");
       return null;
     }
 

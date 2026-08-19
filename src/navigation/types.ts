@@ -25,4 +25,5 @@ export type RootStackParamList = {
   Urgence: undefined;
   RendezVous: undefined;
   ProfilComplet: { section?: ProfilSection } | undefined;
+  Kyc: undefined;
 };

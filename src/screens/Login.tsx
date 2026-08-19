@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Button, PhoneField } from "../ui";
 import { C, DEMO_USER, Profile, brandNavy, darkC } from "../theme";
+import { useScreenInsets } from "../safeArea";
 import { useLoginMutation, useRegisterMutation } from "../queries/hooks";
 import { api } from "../api";
 import { CardDecor, PressScale, ScreenEnter, StaggerItem } from "../motion";
@@ -15,7 +16,7 @@ type Flow = "welcome" | "login" | "register";
 type LoginStep = "phone" | "otp";
 type RegisterStep = "card" | "phone" | "otp";
 
-/** Pastilles d’étapes — ancrage mental « où je suis ». */
+/** Pastilles d’étapes - ancrage mental « où je suis ». */
 function StepDots({
   labels,
   current,
@@ -200,6 +201,7 @@ export default function Login({
   dark?: boolean;
 }) {
   const colors = dark ? darkC : C;
+  const { headerPad, scrollBottom } = useScreenInsets();
   const [flow, setFlow] = useState<Flow>("welcome");
   const [loginStep, setLoginStep] = useState<LoginStep>("phone");
   const [registerStep, setRegisterStep] = useState<RegisterStep>("card");
@@ -338,7 +340,7 @@ export default function Login({
 
   const startDemo = () => (onDemo ? onDemo() : onLogin(DEMO_USER));
 
-  // ——— Écran d’accueil : un choix, pas un formulaire ———
+  // --- Écran d’accueil : un choix, pas un formulaire ---
   if (flow === "welcome") {
     return (
       <LinearGradient colors={[...grad]} style={{ flex: 1 }}>
@@ -346,8 +348,8 @@ export default function Login({
           <ScrollView
             contentContainerStyle={{
               padding: 24,
-              paddingTop: 56,
-              paddingBottom: 32,
+              paddingTop: headerPad + 24,
+              paddingBottom: scrollBottom,
               flexGrow: 1,
               justifyContent: "center",
             }}
@@ -386,7 +388,7 @@ export default function Login({
                     paddingHorizontal: 12,
                   }}
                 >
-                  Dossier médical, DotoCard et urgences — accessibles en un scan.
+                  Dossier médical, DotoCard et urgences - accessibles en un scan.
                 </Text>
               </View>
             </StaggerItem>
@@ -507,14 +509,14 @@ export default function Login({
     );
   }
 
-  // ——— Connexion ———
+  // --- Connexion ---
   if (flow === "login") {
     const stepIndex = loginStep === "phone" ? 0 : 1;
     return (
       <LinearGradient colors={[...grad]} style={{ flex: 1 }}>
         <ScreenEnter>
           <ScrollView
-            contentContainerStyle={{ padding: 24, paddingTop: 40, paddingBottom: 32 }}
+            contentContainerStyle={{ padding: 24, paddingTop: headerPad + 16, paddingBottom: scrollBottom }}
             keyboardShouldPersistTaps="handled"
           >
             <AuthHeader
@@ -605,7 +607,7 @@ export default function Login({
     );
   }
 
-  // ——— Inscription (3 étapes) ———
+  // --- Inscription (3 étapes) ---
   const regIndex = registerStep === "card" ? 0 : registerStep === "phone" ? 1 : 2;
   const regTitles: Record<RegisterStep, { title: string; subtitle: string }> = {
     card: {
@@ -639,7 +641,7 @@ export default function Login({
     <LinearGradient colors={[...grad]} style={{ flex: 1 }}>
       <ScreenEnter>
         <ScrollView
-          contentContainerStyle={{ padding: 24, paddingTop: 40, paddingBottom: 32 }}
+          contentContainerStyle={{ padding: 24, paddingTop: headerPad + 16, paddingBottom: scrollBottom }}
           keyboardShouldPersistTaps="handled"
         >
           <AuthHeader

@@ -244,7 +244,7 @@ export default function Parametres({
       if (!user.hasPin) {
         appAlert(
           "PIN requis",
-          "Configurez d'abord un code PIN — la biométrie s'en sert comme secours."
+          "Configurez d'abord un code PIN - la biométrie s'en sert comme secours."
         );
         setPanel("pin");
         return;
@@ -342,7 +342,7 @@ export default function Parametres({
               compact
               dark={!!dark}
               title="Votre espace patient"
-              subtitle="Profil, sécurité et confidentialité — en toute confiance."
+              subtitle="Profil, sécurité et confidentialité - en toute confiance."
             />
           </StaggerItem>
 
@@ -404,11 +404,20 @@ export default function Parametres({
           </StaggerItem>
           <StaggerItem index={2}>
             <SettingsRow
+              icon="shield-checkmark-outline"
+              label="Vérification d'identité (KYC)"
+              subtitle="Pièce, selfie et statut de validation"
+              colors={colors}
+              onPress={() => navigation.getParent()?.navigate("Kyc")}
+            />
+          </StaggerItem>
+          <StaggerItem index={2}>
+            <SettingsRow
               icon="home-outline"
               label="Filiation & adresse"
               subtitle={
                 user.fatherName || user.addressCommune
-                  ? `${user.fatherName || "Père —"} · ${user.addressCommune || "Commune —"}`
+                  ? `${user.fatherName || "Père -"} · ${user.addressCommune || "Commune -"}`
                   : "Père, mère, commune, quartier"
               }
               colors={colors}
@@ -648,7 +657,7 @@ export default function Parametres({
                   : "Biométrie indisponible"}
               </Text>
               <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4, lineHeight: 17 }}>
-                Face ID / empreinte — le PIN reste le secours.
+                Face ID / empreinte - le PIN reste le secours.
               </Text>
             </View>
             <Switch
@@ -774,7 +783,7 @@ export default function Parametres({
                   Expire{" "}
                   {req.grant_expires_at
                     ? new Date(req.grant_expires_at).toLocaleString("fr-FR")
-                    : "—"}
+                    : "-"}
                 </Text>
                 <Button
                   title="Révoquer"

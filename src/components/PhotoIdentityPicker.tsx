@@ -88,7 +88,7 @@ export function PhotoIdentityPicker({
           paddingHorizontal: 8,
         }}
       >
-        Cadrez votre visage au centre. JPEG, PNG ou WebP — type photo d&apos;identité.
+        Cadrez votre visage au centre. JPEG, PNG ou WebP - type photo d&apos;identité.
       </Text>
       <Button
         title={photoUrl || preview ? "Changer la photo" : "Ajouter une photo d'identité"}

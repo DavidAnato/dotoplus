@@ -1,6 +1,6 @@
 /**
  * Illustrations « SmartArt » : clusters d’icônes Ionicons + formes douces.
- * Style médical premium — vivant sans être enfantin.
+ * Style médical premium - vivant sans être enfantin.
  */
 import React from "react";
 import { StyleSheet, Text, View, ViewStyle, StyleProp } from "react-native";

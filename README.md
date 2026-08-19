@@ -1,4 +1,4 @@
-# dotoplus — App mobile Patient (DOTO+)
+# dotoplus - App mobile Patient (DOTO+)
 
 Application mobile **patient** de l'écosystème **DOTO+**, construite avec
 **Expo / React Native** d'après le design Figma Make (10 écrans).

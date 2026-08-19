@@ -170,8 +170,8 @@ export function SelectField({
               </Text>
               <Text style={{ color: dark ? darkC.muted : "#166534", fontSize: 12, marginTop: 2 }}>
                 {filtered.length === 0
-                  ? "Aucun résultat — enregistrer cette saisie"
-                  : "Pas de correspondance exacte — garder votre texte"}
+                  ? "Aucun résultat - enregistrer cette saisie"
+                  : "Pas de correspondance exacte - garder votre texte"}
               </Text>
             </View>
             <Ionicons name="arrow-forward" size={18} color={dark ? "#4ADE80" : "#16A34A"} />

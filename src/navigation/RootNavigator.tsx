@@ -30,9 +30,11 @@ import Urgence from "../screens/Urgence";
 import NotificationsScreen from "../screens/Notifications";
 import RendezVous from "../screens/RendezVous";
 import ProfilComplet from "../screens/ProfilComplet";
+import KycScreen from "../screens/Kyc";
 import type { AuthStackParamList, MainTabParamList, RootStackParamList } from "./types";
 import { takePendingPush } from "../notifications";
 import { notificationTarget } from "../notifRoutes";
+import { useScreenInsets } from "../safeArea";
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -77,7 +79,7 @@ function OfflineBanner() {
     >
       <Ionicons name="cloud-offline-outline" size={16} color={colors.amber} />
       <Text style={{ color: colors.amber, fontWeight: "700", fontSize: 12, flex: 1 }}>
-        Hors ligne — cache local, file d'actions rejouée à la reconnexion
+        Hors ligne - cache local, file d'actions rejouée à la reconnexion
       </Text>
     </View>
   );
@@ -160,6 +162,7 @@ function MainTabs() {
   const toggleDark = useAppStore((s) => s.toggleDark);
   const storeUnread = useAppStore((s) => s.unread);
   const colors = dark ? darkC : C;
+  const { tabBarPad } = useScreenInsets();
 
   const unreadQ = useUnreadCount(true);
   const pendingQ = usePendingAccessRequests(true);
@@ -182,9 +185,9 @@ function MainTabs() {
           backgroundColor: colors.white,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          paddingBottom: 6,
+          paddingBottom: tabBarPad,
           paddingTop: 6,
-          height: 58,
+          height: 52 + tabBarPad,
           elevation: 8,
           shadowColor: brandNavy,
           shadowOpacity: 0.06,
@@ -291,6 +294,16 @@ function MainNavigator() {
             />
           )}
         </RootStack.Screen>
+        <RootStack.Screen name="Kyc">
+          {({ navigation }) => (
+            <KycScreen
+              dark={dark}
+              onDone={() => {
+                if (navigation.canGoBack()) navigation.goBack();
+              }}
+            />
+          )}
+        </RootStack.Screen>
         <RootStack.Screen
           name="Urgence"
           options={{
@@ -331,7 +344,7 @@ export function RootNavigator({ authInitial }: { authInitial?: keyof AuthStackPa
       if (!data || !navRef.current) return;
       try {
         const t = notificationTarget({ ...data, payload: data });
-        navRef.current.navigate(t.screen, t.params);
+        navRef.current.navigate(t.screen, "params" in t ? t.params : undefined);
       } catch {
         /* nav not ready */
       }

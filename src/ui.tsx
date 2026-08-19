@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { C, brandNavy, onBrand } from "./theme";
 import { PressScale, IconBadge, CardDecor } from "./motion";
 import { BJ_DIAL, formatNational, nationalDigits, toE164Bj, toE164BjRaw } from "./phone";
+import { useScreenInsets } from "./safeArea";
 
 export type ThemeColors = typeof C;
 
@@ -73,7 +74,7 @@ export function Card({
     },
     style,
   ];
-  // CardDecor is absolute + pointerEvents none — keep children as direct layout children
+  // CardDecor is absolute + pointerEvents none - keep children as direct layout children
   // so flexDirection / gap / alignItems on `style` apply correctly.
   const inner = (
     <>
@@ -339,7 +340,7 @@ export function PhoneField({
   );
 }
 
-/** Header toujours en navy marque (pas le token darkC.navy clair) */
+/** Header navy : insets top (status bar / edge-to-edge). */
 export function Header({
   title,
   subtitle,
@@ -352,12 +353,13 @@ export function Header({
   onBack?: () => void;
   right?: React.ReactNode;
 }) {
+  const { headerPad } = useScreenInsets();
   return (
     <View
       style={{
         backgroundColor: brandNavy,
         paddingHorizontal: space.md,
-        paddingTop: space.sm,
+        paddingTop: headerPad,
         paddingBottom: space.md,
       }}
     >

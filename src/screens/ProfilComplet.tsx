@@ -252,7 +252,7 @@ export default function ProfilComplet({
   }, [buildPayload]);
 
   const persist = useCallback(async () => {
-    // Aucun champ médical n'est bloquant — on sauvegarde ce qui est renseigné.
+    // Aucun champ médical n'est bloquant - on sauvegarde ce qui est renseigné.
     if (urgenceTel && !isValidBjPhone(urgenceTel)) {
       setError("Téléphone d'urgence invalide.");
       setSaveStatus("error");
@@ -482,7 +482,7 @@ export default function ProfilComplet({
                         accessibilityLabel={`Retirer ${c.nom}`}
                       >
                         <Pill color={C.amber} bg={dark ? colors.amberSoft : C.amberSoft}>
-                          {c.depuis ? `${c.nom} — depuis ${c.depuis}` : c.nom}  ×
+                          {c.depuis ? `${c.nom} - depuis ${c.depuis}` : c.nom}  ×
                         </Pill>
                       </Pressable>
                     ))}

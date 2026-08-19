@@ -20,10 +20,11 @@ import { useAppStore } from "../store/appStore";
 import { Avatar } from "../components/Avatar";
 import { usePullRefresh } from "../hooks/usePullRefresh";
 import { api } from "../api";
+import { useScreenInsets } from "../safeArea";
 
 function formatRdvWhen(iso: string) {
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleString("fr-FR", {
     weekday: "long",
     day: "numeric",
@@ -57,6 +58,7 @@ export default function Home({
   dark?: boolean;
 }) {
   const colors = dark ? darkC : C;
+  const { headerPad, scrollBottom } = useScreenInsets();
   const online = useAppStore((s) => s.online);
   const storeUnread = useAppStore((s) => s.unread);
   const setUser = useAppStore((s) => s.setUser);
@@ -88,7 +90,7 @@ export default function Home({
           end={{ x: 1, y: 1 }}
           style={{
             paddingHorizontal: 16,
-            paddingTop: 14,
+            paddingTop: headerPad,
             paddingBottom: 20,
             borderBottomLeftRadius: 24,
             borderBottomRightRadius: 24,
@@ -113,46 +115,24 @@ export default function Home({
                 {user.npi}
               </Text>
             </View>
-            <PressScale onPress={() => onNavigate?.("notifications")}>
-              <View style={{ position: "relative" }}>
-                <Avatar
-                  uri={user.photoUrl}
-                  firstName={user.firstName}
-                  lastName={user.lastName}
-                  size={50}
-                  bg="rgba(255,255,255,0.2)"
-                  textColor="#fff"
-                  style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.35)" }}
-                />
-                {unread > 0 ? (
-                  <View
-                    style={{
-                      position: "absolute",
-                      top: -4,
-                      right: -4,
-                      backgroundColor: C.emergency,
-                      borderRadius: 10,
-                      minWidth: 18,
-                      height: 18,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      paddingHorizontal: 4,
-                    }}
-                  >
-                    <Text style={{ color: "#fff", fontSize: 10, fontWeight: "800" }}>
-                      {unread > 9 ? "9+" : unread}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
-            </PressScale>
+            <View style={{ position: "relative" }}>
+              <Avatar
+                uri={user.photoUrl}
+                firstName={user.firstName}
+                lastName={user.lastName}
+                size={50}
+                bg="rgba(255,255,255,0.2)"
+                textColor="#fff"
+                style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.35)" }}
+              />
+            </View>
           </View>
 
           <CriticalHeroStrip user={user} />
         </LinearGradient>
 
         <ScrollView
-          contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 24 }}
+          contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: scrollBottom }}
           refreshControl={refreshControl}
         >
           {pendingList.length > 0 ? (
@@ -312,7 +292,7 @@ export default function Home({
                 Mode urgence
               </Text>
               <Text style={{ color: colors.muted, fontSize: 12, marginTop: 2 }}>
-                Identité, sang, allergies — hors ligne
+                Identité, sang, allergies - hors ligne
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={C.emergency} />

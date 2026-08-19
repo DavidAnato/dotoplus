@@ -143,7 +143,7 @@ export default function Dossier({ user, dark = false }: { user: Profile; dark?: 
                   compact
                   dark={dark}
                   title="Votre parcours de soins"
-                  subtitle="Consultations, chroniques et historique — toujours à portée de main."
+                  subtitle="Consultations, chroniques et historique - toujours à portée de main."
                 />
               ) : null}
               {sub === "ordonnances" ? (
@@ -183,7 +183,13 @@ export default function Dossier({ user, dark = false }: { user: Profile; dark?: 
               {sub === "ordonnances" && (
                 <Ordonnances dark={dark} items={hist?.ordonnances || []} />
               )}
-              {sub === "examens" && <Examens dark={dark} items={hist?.examens || []} />}
+              {sub === "examens" && (
+                <Examens
+                  dark={dark}
+                  items={hist?.examens || []}
+                  bons={hist?.bons_examen || []}
+                />
+              )}
               {sub === "assurance" && (
                 <Assurance user={user} dark={dark} data={assurance} />
               )}
@@ -224,7 +230,7 @@ function DossierTab({
                   {typeof c === "string"
                     ? c
                     : c.depuis
-                      ? `${c.nom} — depuis ${c.depuis}`
+                      ? `${c.nom} - depuis ${c.depuis}`
                       : c.nom}
                 </Pill>
               ))
@@ -272,11 +278,11 @@ function DossierTab({
                     {c.titre ||
                       [c.specialite || "Consultation", c.medecin_nom, c.structure_nom]
                         .filter(Boolean)
-                        .join(" — ") ||
+                        .join(" - ") ||
                       "Consultation"}
                   </Text>
                   <Text style={{ color: colors.muted, fontSize: 12 }}>
-                    {c.date ? new Date(c.date).toLocaleDateString("fr-FR") : "—"}
+                    {c.date ? new Date(c.date).toLocaleDateString("fr-FR") : "-"}
                     {c.appointment_id ? " · Liée à un RDV" : ""}
                   </Text>
                   <Text style={{ color: colors.muted, fontSize: 12 }}>
@@ -328,8 +334,8 @@ function formatMedLine(m: any): string {
   const moment = momentMap[m.moment] || "";
   return [m.nom, m.dosage, m.forme, m.quantite, poso, duree, moment, m.instructions]
     .map((x) => (x == null ? "" : String(x).trim()))
-    .filter((x) => x && x !== "—")
-    .join(" — ");
+    .filter((x) => x && x !== "-")
+    .join(" - ");
 }
 
 function Ordonnances({ dark, items }: { dark: boolean; items: any[] }) {
@@ -389,13 +395,28 @@ function Ordonnances({ dark, items }: { dark: boolean; items: any[] }) {
   );
 }
 
-function Examens({ dark, items }: { dark: boolean; items: any[] }) {
+function Examens({
+  dark,
+  items,
+  bons,
+}: {
+  dark: boolean;
+  items: any[];
+  bons: any[];
+}) {
   const colors = dark ? darkC : C;
-  if (!items.length) {
+  const BON_LABELS: Record<string, string> = {
+    demande: "Demandé",
+    recu: "Reçu",
+    en_cours: "En cours",
+    resultat_disponible: "Résultat disponible",
+    cloture: "Clôturé",
+  };
+  if (!items.length && !bons.length) {
     return (
       <EmptyState
         title="Aucun examen"
-        subtitle="Résultats de laboratoire et imagerie à venir."
+        subtitle="Les bons prescrits par votre médecin et les résultats apparaîtront ici."
         dark={dark}
         icon="flask-outline"
         companions={["pulse", "eyedrop"]}
@@ -404,24 +425,57 @@ function Examens({ dark, items }: { dark: boolean; items: any[] }) {
   }
   return (
     <>
+      {bons.length ? (
+        <>
+          <SectionLabel color={colors.navy}>Bons d'examen</SectionLabel>
+          {bons.map((b, i) => (
+            <StaggerItem key={b.id || `bon-${i}`} index={i}>
+              <Card colors={colors} style={{ marginBottom: 8 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <Text style={{ fontWeight: "800", color: colors.text }}>
+                    Bon #{b.id}
+                  </Text>
+                  <Pill color={C.green} bg={colors.lightBlue}>
+                    {b.statut_label || BON_LABELS[b.statut] || b.statut}
+                  </Pill>
+                </View>
+                <Text style={{ color: colors.muted, fontSize: 12, marginTop: 6 }}>
+                  {[b.medecin_nom, b.structure_nom, b.laboratoire_nom || b.laboratoire_structure_nom]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </Text>
+                {(b.lignes || []).map((l: any) => (
+                  <Text key={l.id || l.type_examen} style={{ color: colors.text, fontSize: 13, marginTop: 6 }}>
+                    • {l.type_examen}
+                  </Text>
+                ))}
+              </Card>
+            </StaggerItem>
+          ))}
+        </>
+      ) : null}
       <SectionLabel color={colors.navy}>Résultats</SectionLabel>
-      {items.map((x, i) => (
-        <StaggerItem key={x.id || i} index={i}>
-          <Card colors={colors}>
-            <Text style={{ fontWeight: "800", color: colors.text }}>{x.type_examen}</Text>
-            <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4 }}>
-              {x.laboratoire} ·{" "}
-              {x.date ? new Date(x.date).toLocaleDateString("fr-FR") : "—"} ·{" "}
-              {x.statut_label || x.statut}
-            </Text>
-            {x.resultat_texte ? (
-              <Text style={{ color: colors.text, fontSize: 13, marginTop: 8 }}>
-                {x.resultat_texte}
+      {items.length === 0 ? (
+        <Text style={{ color: colors.muted }}>Aucun résultat déposé pour le moment.</Text>
+      ) : (
+        items.map((x, i) => (
+          <StaggerItem key={x.id || i} index={i}>
+            <Card colors={colors}>
+              <Text style={{ fontWeight: "800", color: colors.text }}>{x.type_examen}</Text>
+              <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4 }}>
+                {x.laboratoire} ·{" "}
+                {x.date ? new Date(x.date).toLocaleDateString("fr-FR") : "-"} ·{" "}
+                {x.statut_label || x.statut}
               </Text>
-            ) : null}
-          </Card>
-        </StaggerItem>
-      ))}
+              {x.resultat_texte ? (
+                <Text style={{ color: colors.text, fontSize: 13, marginTop: 8 }}>
+                  {x.resultat_texte}
+                </Text>
+              ) : null}
+            </Card>
+          </StaggerItem>
+        ))
+      )}
     </>
   );
 }

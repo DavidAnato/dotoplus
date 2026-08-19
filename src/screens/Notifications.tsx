@@ -165,7 +165,7 @@ export default function NotificationsScreen({ dark = false }: { dark?: boolean }
           {activeList.length > 0 ? (
             <View style={{ gap: 10 }}>
               <Text style={{ color: colors.navy, fontWeight: "800", fontSize: 13 }}>
-                Accès actifs — révoquer
+                Accès actifs - révoquer
               </Text>
               {activeList.map((req) => (
                 <Card key={`active-${req.id}`} colors={colors} decor="calm" style={{ gap: 8 }}>
@@ -178,7 +178,7 @@ export default function NotificationsScreen({ dark = false }: { dark?: boolean }
                     Expire{" "}
                     {req.grant_expires_at
                       ? new Date(req.grant_expires_at).toLocaleString("fr-FR")
-                      : "—"}
+                      : "-"}
                   </Text>
                   <Button
                     title="Révoquer l'accès"
@@ -244,7 +244,7 @@ export default function NotificationsScreen({ dark = false }: { dark?: boolean }
                 onPress={() => {
                   if (!n.read_at && !n.is_read) mark.mutate(n.id);
                   const t = notificationTarget(n);
-                  nav.navigate(t.screen as any, t.params as any);
+                  nav.navigate(t.screen as any, "params" in t ? t.params : undefined);
                 }}
               >
                 <Card

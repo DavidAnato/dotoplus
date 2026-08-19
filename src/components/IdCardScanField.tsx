@@ -138,12 +138,12 @@ function IdentityCardSummary({
 
       {pending ? (
         <View style={{ gap: 8, marginTop: 12 }}>
-          <Button title="Valider ces informations" icon="checkmark" onPress={onConfirm} />
+          <Button title="Valider ces informations" icon="checkmark" onPress={() => onConfirm?.()} />
           <Button
             title="Rescanner"
             outline
             color={dark ? C.blue : brandNavy}
-            onPress={onRescan}
+            onPress={() => onRescan?.()}
           />
         </View>
       ) : null}
@@ -212,7 +212,7 @@ export function IdCardScanField({
       if (/timed?\s*out|timeout|abort/i.test(msg)) {
         appAlert(
           "Scan carte",
-          "Délai dépassé pendant la lecture. Réessayez avec une photo nette et bien cadrée — le serveur doit tourner."
+          "Délai dépassé pendant la lecture. Réessayez avec une photo nette et bien cadrée - le serveur doit tourner."
         );
       } else {
         appAlert("Scan carte", msg || "Lecture OCR impossible.");
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   previewWrap: { borderRadius: 10, overflow: "hidden", position: "relative" },
-  previewDim: { ...StyleSheet.absoluteFillObject },
+  previewDim: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
   loadingRow: { flexDirection: "row", alignItems: "center", gap: 14 },
   loadingTitle: { fontWeight: "800", fontSize: 15 },
   loadingSub: { fontSize: 12, marginTop: 3 },

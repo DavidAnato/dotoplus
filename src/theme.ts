@@ -1,4 +1,4 @@
-﻿// DotoPlus — tokens de design (marque DOTO+).
+﻿// DotoPlus - tokens de design (marque DOTO+).
 export const C = {
   navy: "#1E3755",
   blue: "#3E8295",
@@ -19,7 +19,7 @@ export const C = {
   grey: "#9CA3AF",
 };
 
-/** Variante sombre — fond noir mat, surfaces élevées, teal en accent uniquement */
+/** Variante sombre - fond noir mat, surfaces élevées, teal en accent uniquement */
 export const darkC = {
   ...C,
   bg: "#0A0A0A",
@@ -40,7 +40,7 @@ export const darkC = {
   navy: "#F5F5F5",
 };
 
-/** Navy marque (headers / boutons) — ne change jamais en dark mode */
+/** Navy marque (headers / boutons) - ne change jamais en dark mode */
 export const brandNavy = "#1E3755";
 export const brandBlue = "#3E8295";
 export const onBrand = "#FFFFFF";
@@ -145,7 +145,7 @@ export function normalizeProfile(p: Partial<Profile> & Pick<Profile, "firstName"
   };
 }
 
-// Profil de démonstration (mode hors ligne / fallback) — cohérent avec le seed backend.
+// Profil de démonstration (mode hors ligne / fallback) - cohérent avec le seed backend.
 export const DEMO_USER: Profile = {
   firstName: "Kofi Emmanuel",
   lastName: "ADJOVI",

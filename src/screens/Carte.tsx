@@ -46,7 +46,7 @@ function statusTone(statut?: string, colors = C) {
     case "expiree":
       return { color: colors.muted, bg: colors.bg, label: "Expirée" };
     default:
-      return { color: colors.blue, bg: colors.lightBlue, label: "—" };
+      return { color: colors.blue, bg: colors.lightBlue, label: "-" };
   }
 }
 
@@ -261,7 +261,7 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
               compact
               dark={dark}
               title="Ma DotoCard"
-              subtitle="Présentez le QR au professionnel — identité et NPI vérifiés en un scan."
+              subtitle="Présentez le QR au professionnel - identité et NPI vérifiés en un scan."
             />
           </StaggerItem>
 
@@ -378,7 +378,7 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
             <ActionRow
               icon="eye-outline"
               title="Aperçu 3D"
-              subtitle="Recto / verso — glissez depuis n'importe quel côté"
+              subtitle="Recto / verso - glissez depuis n'importe quel côté"
               onPress={() => setPreviewOpen(true)}
               colors={colors}
               disabled={!token}
@@ -448,11 +448,11 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
           Aperçu DotoCard
         </Text>
         <Text style={{ color: colors.muted, fontSize: 13, marginBottom: 16 }}>
-          Aperçu 3D simple — glissez depuis n'importe quel côté pour retourner.
+          Aperçu 3D simple - glissez depuis n'importe quel côté pour retourner.
         </Text>
 
         <ScrollView contentContainerStyle={{ alignItems: "center", paddingBottom: 8 }}>
-          <DotoCard3D user={user} token={token} cardId={card?.id} expiry={expiry} />
+          <DotoCard3D user={user} token={token} cardId={card?.id ?? undefined} expiry={expiry} />
         </ScrollView>
 
         <View style={{ gap: 10, marginTop: 8 }}>

@@ -1,4 +1,4 @@
-/** Modal de consentement patient — demande d'accès pro (overlay global). */
+/** Modal de consentement patient - demande d'accès pro (overlay global). */
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -297,7 +297,7 @@ export function ConsentModal({
               lineHeight: 15,
             }}
           >
-            Vous gardez le contrôle — révocable à tout moment dans Alertes.
+            Vous gardez le contrôle - révocable à tout moment dans Alertes.
           </Text>
         </Animated.View>
       </View>

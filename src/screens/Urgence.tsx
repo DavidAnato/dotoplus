@@ -257,7 +257,7 @@ export default function Urgence({
               compact
               dark={dark}
               title="Infos critiques immédiates"
-              subtitle="Groupe sanguin, allergies, contact — calmes et lisibles pour les secours."
+              subtitle="Groupe sanguin, allergies, contact - calmes et lisibles pour les secours."
             />
           </StaggerItem>
 
@@ -309,7 +309,7 @@ export default function Urgence({
                   }}
                   numberOfLines={1}
                 >
-                  {user.npi || "—"}
+                  {user.npi || "-"}
                 </Text>
               </View>
             </View>
@@ -373,7 +373,7 @@ export default function Urgence({
                   value={
                     user.emergencyName
                       ? `${user.emergencyName}\n${user.emergencyPhone || ""}`.trim()
-                      : user.emergencyPhone || "—"
+                      : user.emergencyPhone || "-"
                   }
                   colors={colors}
                   dark={dark}
@@ -386,7 +386,7 @@ export default function Urgence({
                 <InfoRow
                   icon="shield-checkmark-outline"
                   label="Assurance"
-                  value={`${user.insurer || "—"}${user.policyNumber ? ` · ${user.policyNumber}` : ""}`}
+                  value={`${user.insurer || "-"}${user.policyNumber ? ` · ${user.policyNumber}` : ""}`}
                   colors={colors}
                   dark={dark}
                   accent="insurance"
@@ -419,7 +419,7 @@ export default function Urgence({
                 paddingHorizontal: 12,
               }}
             >
-              Infos critiques synchronisées — disponibles hors connexion via le dernier snapshot.
+              Infos critiques synchronisées - disponibles hors connexion via le dernier snapshot.
             </Text>
           </StaggerItem>
         </ScrollView>

@@ -13,7 +13,7 @@ function initialsFrom(name?: string, first?: string, last?: string): string {
   return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 }
 
-/** Avatar circulaire — photo d'identité ou initiales sur dégradé premium. */
+/** Avatar circulaire - photo d'identité ou initiales sur dégradé premium. */
 export function Avatar({
   uri,
   name,
@@ -31,7 +31,7 @@ export function Avatar({
   lastName?: string;
   size?: number;
   style?: ViewStyle;
-  /** Conservé pour compat — le fallback utilise le dégradé marque. */
+  /** Conservé pour compat - le fallback utilise le dégradé marque. */
   bg?: string;
   textColor?: string;
   ring?: boolean;

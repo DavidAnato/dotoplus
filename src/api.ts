@@ -268,7 +268,7 @@ export const api = {
         typeof data.detail === "string" ? data.detail : "Lecture de la carte impossible.";
       if (/timed?\s*out|timeout/i.test(detail)) {
         throw new Error(
-          "Délai dépassé pendant la lecture OCR. Réessayez — la première lecture peut être plus longue."
+          "Délai dépassé pendant la lecture OCR. Réessayez - la première lecture peut être plus longue."
         );
       }
       throw new Error(detail);
@@ -592,10 +592,61 @@ export const api = {
     consultations: any[];
     ordonnances: any[];
     examens: any[];
+    bons_examen: any[];
   }> {
     const res = await request("/api/patients/me/historique/");
     if (!res.ok) throw new Error("Historique indisponible.");
     return res.json();
+  },
+
+  async kycMe() {
+    const res = await request("/api/auth/kyc/me/");
+    if (!res.ok) throw new Error("KYC indisponible.");
+    return res.json();
+  },
+
+  async patchKyc(payload: Record<string, unknown>) {
+    const res = await request("/api/auth/kyc/me/", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || "Enregistrement KYC impossible.");
+    }
+    return res.json();
+  },
+
+  async submitKyc() {
+    const res = await request("/api/auth/kyc/me/submit/", { method: "POST" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.detail || "Envoi KYC impossible.");
+    }
+    return res.json();
+  },
+
+  async uploadKyc(kind: "recto" | "verso" | "selfie", uri: string, mime = "image/jpeg", filename = "kyc.jpg") {
+    const token = await storage.getAccess();
+    const safeName = filename.includes(".") ? filename : `${filename}.jpg`;
+    const fileUri = await ensureLocalFileUri(uri, safeName);
+    const result = await FileSystem.uploadAsync(`${API_URL}/api/auth/kyc/me/upload/${kind}/`, fileUri, {
+      httpMethod: "POST",
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: "file",
+      mimeType: mime || "image/jpeg",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    let data: any = {};
+    try {
+      data = JSON.parse(result.body || "{}");
+    } catch {
+      data = {};
+    }
+    if (result.status < 200 || result.status >= 300) {
+      throw new Error(data.detail || "Upload KYC impossible.");
+    }
+    return data;
   },
 
   async myAssurance(): Promise<any | null> {
