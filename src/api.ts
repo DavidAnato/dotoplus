@@ -2,13 +2,13 @@ import * as FileSystem from "expo-file-system/legacy";
 import { DEMO_USER, Profile, normalizeProfile } from "./theme";
 import { OfflineSnapshot, storage } from "./storage";
 
-// Local : EXPO_PUBLIC_API_URL ou 127.0.0.1. Preview/prod EAS : URL Render.
+// Local : EXPO_PUBLIC_API_URL. Preview/prod EAS : tunnel local (doto-anato).
 const DEFAULT_HOST = "127.0.0.1";
 const API_URL =
   process.env.EXPO_PUBLIC_API_URL ||
   (process.env.EAS_BUILD === "true"
-    ? "https://doto-backend-71tk.onrender.com"
-    : `http://${DEFAULT_HOST}:8000`);
+    ? "https://doto-anato.loca.lt"
+    : `http://${DEFAULT_HOST}:8001`);
 
 /** URI locale utilisable par uploadAsync (file://). */
 async function ensureLocalFileUri(uri: string, filename: string): Promise<string> {
