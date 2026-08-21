@@ -35,3 +35,12 @@ npm start                   # puis 'a' (Android), 'i' (iOS) ou 'w' (web)
 - Bouton « Continuer en démo » → urgence hors ligne sans API
 
 Configurez `EXPO_PUBLIC_API_URL` (voir `.env.example`).
+
+## Build APK via GitHub Actions
+
+Sans EAS : workflow `.github/workflows/android-apk.yml`.
+
+1. Sur GitHub : **Actions** → **Android APK** → **Run workflow** (ou push sur `main` qui touche le code mobile).
+2. À la fin du run : ouvrir le job → section **Artifacts** → télécharger **`dotoplus-android`** (`app-release.apk`).
+3. L’APK est signé avec le **keystore debug** Android (preview interne, pas pour le Play Store).
+4. `EXPO_PUBLIC_API_URL` injectée = celle de `eas.json` preview/production (`https://doto-anato.loca.lt`).
