@@ -2,12 +2,12 @@ import * as FileSystem from "expo-file-system/legacy";
 import { DEMO_USER, Profile, normalizeProfile } from "./theme";
 import { OfflineSnapshot, storage } from "./storage";
 
-// Local : EXPO_PUBLIC_API_URL. Preview/prod EAS : tunnel local (doto-anato).
+// Local : EXPO_PUBLIC_API_URL. Preview/prod EAS : tunnel local (localtunnel).
 const DEFAULT_HOST = "127.0.0.1";
 const API_URL =
   process.env.EXPO_PUBLIC_API_URL ||
   (process.env.EAS_BUILD === "true"
-    ? "https://doto-anato.loca.lt"
+    ? "https://itchy-owl-100.loca.lt"
     : `http://${DEFAULT_HOST}:8001`);
 
 /** URI locale utilisable par uploadAsync (file://). */
