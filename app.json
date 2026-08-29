@@ -8,9 +8,9 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/logo-doto.png",
       "resizeMode": "contain",
-      "backgroundColor": "#1E3755"
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
@@ -54,9 +54,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#1E3755",
-          "image": "./assets/splash-icon.png",
-          "imageWidth": 180,
+          "backgroundColor": "#000000",
+          "image": "./assets/logo-doto.png",
+          "imageWidth": 200,
           "resizeMode": "contain"
         }
       ],

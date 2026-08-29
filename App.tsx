@@ -11,10 +11,9 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 import * as LocalAuthentication from "expo-local-authentication";
 import * as SplashScreen from "expo-splash-screen";
-import { C, brandNavy, onBrand } from "./src/theme";
+import { C, brandNavy } from "./src/theme";
 import { api, setSessionExpiredHandler } from "./src/api";
 import { storage } from "./src/storage";
 import { wipeClientCaches } from "./src/session";
@@ -54,24 +53,15 @@ function BootView() {
   }));
 
   return (
-    <LinearGradient
-      colors={[brandNavy, "#243F5C", C.blue]}
-      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-    >
+    <View style={{ flex: 1, backgroundColor: "#000000", alignItems: "center", justifyContent: "center" }}>
       <Animated.View style={style}>
         <Image
-          source={require("./assets/splash-icon.png")}
-          style={{ width: 112, height: 112 }}
+          source={require("./assets/logo-doto.png")}
+          style={{ width: 200, height: 48 }}
           resizeMode="contain"
         />
       </Animated.View>
-      <Text style={{ color: onBrand, marginTop: 16, fontWeight: "800", fontSize: 22, letterSpacing: 1 }}>
-        DOTO+
-      </Text>
-      <Text style={{ color: "rgba(255,255,255,0.65)", marginTop: 6, fontSize: 13 }}>
-        Espace patient
-      </Text>
-    </LinearGradient>
+    </View>
   );
 }
 
