@@ -39,6 +39,22 @@ async function hideSplash() {
   }
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error("timeout")), ms);
+    promise.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      }
+    );
+  });
+}
+
 function BootView() {
   const pulse = useSharedValue(0.97);
   useEffect(() => {
@@ -53,11 +69,11 @@ function BootView() {
   }));
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#000000", alignItems: "center", justifyContent: "center" }}>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
       <Animated.View style={style}>
         <Image
-          source={require("./assets/logo-doto.png")}
-          style={{ width: 200, height: 48 }}
+          source={require("./assets/logo-splash.png")}
+          style={{ width: 220, height: 66 }}
           resizeMode="contain"
         />
       </Animated.View>
@@ -187,19 +203,25 @@ function AppInner() {
   }, [phase, setLocked, shouldLock, needsPinSetup]);
 
   useEffect(() => {
+    let cancelled = false;
+    const failSafe = setTimeout(() => {
+      if (cancelled) return;
+      if (useAppStore.getState().phase === "boot") {
+        setAuthInitial("Login");
+        setPhase("login");
+      }
+      setBootDone(true);
+      void hideSplash();
+    }, 8000);
+
     (async () => {
       try {
         const token = await storage.getAccess();
         if (token) {
           try {
-            const me = await api.me();
+            const me = await withTimeout(api.me(), 6000);
             if (me) {
               enterMain(me);
-              if (await shouldLock(me)) {
-                const bioOk = await tryBiometricUnlock();
-                if (!bioOk) setLocked(true);
-                else setLocked(false);
-              }
               return;
             }
           } catch {
@@ -215,10 +237,21 @@ function AppInner() {
         setAuthInitial(snap ? "Login" : "Onboarding");
         setPhase(snap ? "login" : "onboarding");
       } finally {
+        clearTimeout(failSafe);
         setBootDone(true);
         await hideSplash();
+        const st = useAppStore.getState();
+        if (st.phase === "main" && !st.needsPinSetup && (await shouldLock(st.user))) {
+          const bioOk = await tryBiometricUnlock();
+          if (!bioOk) setLocked(true);
+          else setLocked(false);
+        }
       }
     })();
+    return () => {
+      cancelled = true;
+      clearTimeout(failSafe);
+    };
   }, [enterMain, setPhase, setLocked, shouldLock, tryBiometricUnlock]);
 
   useEffect(() => {
@@ -367,6 +400,10 @@ class BootErrorBoundary extends React.Component<
 }
 
 export default function App() {
+  useEffect(() => {
+    const t = setTimeout(() => void hideSplash(), 400);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
