@@ -212,10 +212,10 @@ export function IdCardScanField({
       if (/timed?\s*out|timeout|abort/i.test(msg)) {
         appAlert(
           "Scan carte",
-          "Délai dépassé pendant la lecture. Réessayez avec une photo nette et bien cadrée - le serveur doit tourner."
+          "Délai dépassé pendant la lecture. Réessayez avec une photo nette et bien cadrée."
         );
       } else {
-        appAlert("Scan carte", msg || "Lecture OCR impossible.");
+        appAlert("Scan carte", msg || "Lecture de la carte impossible.");
       }
       setPreview(null);
       setPending(null);

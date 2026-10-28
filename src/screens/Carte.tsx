@@ -327,7 +327,15 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
                   <QRCode value={token} size={240} ecl="M" backgroundColor="#ffffff" color="#101110" />
                 </Pressable>
               ) : null}
-              {!showSkeleton && !token ? (
+              {!showSkeleton && isError && !token ? (
+                <View style={{ alignItems: "center", gap: 10, marginVertical: 12 }}>
+                  <Text style={{ color: colors.muted, textAlign: "center", fontSize: 13 }}>
+                    {(error as Error)?.message || "Impossible de joindre le serveur."}
+                  </Text>
+                  <Button title="Réessayer" icon="refresh-outline" onPress={() => refetch()} outline />
+                </View>
+              ) : null}
+              {!showSkeleton && !token && !isError ? (
                 <FirstCardGate
                   user={user}
                   dark={dark}
@@ -354,7 +362,7 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
               ) : null}
               {offline ? (
                 <Text style={{ color: colors.amber, fontWeight: "700", fontSize: 12, marginTop: 8 }}>
-                  Affichage hors ligne (cache)
+                  Données enregistrées sur cet appareil
                 </Text>
               ) : null}
               {isError && !token ? null : (
@@ -411,7 +419,7 @@ export default function Carte({ user, dark = false }: { user: Profile; dark?: bo
             <ActionRow
               icon="refresh-outline"
               title="Demander nouvelle carte"
-              subtitle="Réémettre un nouveau token QR"
+              subtitle="Demander un nouveau code de carte"
               onPress={confirmReissue}
               colors={colors}
               disabled={busy || offline}

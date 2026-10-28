@@ -1,14 +1,32 @@
 import * as FileSystem from "expo-file-system/legacy";
+import { formatDrfData, humanizeApiText } from "./apiMessage";
 import { DEMO_USER, Profile, normalizeProfile } from "./theme";
 import { OfflineSnapshot, storage } from "./storage";
 
-// Local : EXPO_PUBLIC_API_URL. Preview/prod EAS : tunnel local (localtunnel).
+function apiFail(data: unknown, fallback: string): string {
+  return formatDrfData(data) || humanizeApiText(fallback);
+}
+
+// Local : EXPO_PUBLIC_API_URL. Preview/prod EAS : API publique.
 const DEFAULT_HOST = "127.0.0.1";
 const API_URL =
   process.env.EXPO_PUBLIC_API_URL ||
   (process.env.EAS_BUILD === "true"
-    ? "https://doto-anato.loca.lt"
+    ? "https://doto-api.await-tech.com"
     : `http://${DEFAULT_HOST}:8001`);
+
+/** Remet un chemin /media/ à la racine s'il a été collé sous /api/… */
+export function canonicalMediaUrl(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const idx = parsed.pathname.indexOf("/media/");
+    if (idx > 0) parsed.pathname = parsed.pathname.slice(idx);
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
 
 /** URI locale utilisable par uploadAsync (file://). */
 async function ensureLocalFileUri(uri: string, filename: string): Promise<string> {
@@ -49,7 +67,7 @@ function mapPatient(p: any): Profile {
     hasPin: !!p.has_pin,
     requireUnlock: !!p.require_unlock,
     urgenceWhenLocked: p.urgence_when_locked !== false,
-    photoUrl: p.photo_url || null,
+    photoUrl: canonicalMediaUrl(p.photo_url),
     photoRequired: p.photo_required !== false && !p.photo_url,
     profileComplete: !!p.profile_complete,
   });
@@ -133,7 +151,7 @@ async function request(path: string, options: RequestInit = {}, retry = true): P
     ...(options.headers as Record<string, string> | undefined),
   };
   const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), 10000);
+  const timer = setTimeout(() => ac.abort(), 25000);
   try {
     const res = await fetch(`${API_URL}${path}`, {
       ...options,
@@ -146,6 +164,11 @@ async function request(path: string, options: RequestInit = {}, retry = true): P
       if (hadAuth) await notifySessionExpired();
     }
     return res;
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") {
+      throw new Error("Le serveur met trop de temps à répondre. Réessayez.");
+    }
+    throw e;
   } finally {
     clearTimeout(timer);
   }
@@ -182,7 +205,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Identifiants invalides.");
+      throw new Error(apiFail(data, "Identifiants invalides."));
     }
     const data = await res.json();
     await storage.saveTokens(data.access, data.refresh);
@@ -210,7 +233,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Envoi OTP impossible.");
+      throw new Error(apiFail(data, "Envoi OTP impossible."));
     }
     return res.json();
   },
@@ -235,11 +258,14 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Inscription impossible.");
+      throw new Error(apiFail(data, "Inscription impossible."));
     }
     const data = await res.json();
     await storage.saveTokens(data.access, data.refresh);
     const profile = data.patient ? mapPatient(data.patient) : DEMO_USER;
+    if (typeof data.message === "string" && data.message) {
+      (profile as Profile & { activationMessage?: string }).activationMessage = data.message;
+    }
     await persistPatient(profile);
     return profile;
   },
@@ -262,10 +288,10 @@ export const api = {
       const raw = String(e?.message || e || "");
       if (/timed?\s*out|timeout|abort/i.test(raw)) {
         throw new Error(
-          "Le serveur met trop de temps à lire la carte. Vérifiez que le backend tourne, puis réessayez avec une photo bien cadrée."
+          "La lecture de la carte prend trop de temps. Réessayez avec une photo bien cadrée."
         );
       }
-      throw new Error(raw || "Lecture de la carte impossible.");
+      throw new Error(humanizeApiText(raw) || "Lecture de la carte impossible.");
     }
     let data: any = {};
     try {
@@ -274,8 +300,7 @@ export const api = {
       data = {};
     }
     if (result.status < 200 || result.status >= 300) {
-      const detail =
-        typeof data.detail === "string" ? data.detail : "Lecture de la carte impossible.";
+      const detail = apiFail(data, "Lecture de la carte impossible.");
       if (/timed?\s*out|timeout/i.test(detail)) {
         throw new Error(
           "Délai dépassé pendant la lecture OCR. Réessayez - la première lecture peut être plus longue."
@@ -316,7 +341,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Changement de mot de passe impossible.");
+      throw new Error(apiFail(data, "Changement de mot de passe impossible."));
     }
     return res.json();
   },
@@ -329,7 +354,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "PIN invalide.");
+      throw new Error(apiFail(data, "PIN invalide."));
     }
     const data = await res.json();
     await storage.saveTokens(data.access, data.refresh);
@@ -347,7 +372,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Impossible d'enregistrer le PIN.");
+      throw new Error(apiFail(data, "Impossible d'enregistrer le PIN."));
     }
     await storage.setPinConfigured(true);
     await storage.saveLocalPin(pin);
@@ -369,7 +394,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "PIN incorrect.");
+      throw new Error(apiFail(data, "PIN incorrect."));
     }
     await storage.saveLocalPin(pin);
     return res.json();
@@ -382,7 +407,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Impossible de mettre à jour.");
+      throw new Error(apiFail(data, "Impossible de mettre à jour."));
     }
     const data = await res.json();
     if (data.patient) {
@@ -420,7 +445,13 @@ export const api = {
     date_creation?: string;
   }> {
     const res = await request("/api/dodocards/mine/");
-    if (!res.ok) throw new Error("DotoCard introuvable.");
+    if (res.status === 404) {
+      throw Object.assign(new Error("DotoCard introuvable."), { status: 404 });
+    }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(apiFail(data, "DotoCard indisponible."));
+    }
     return res.json();
   },
 
@@ -447,7 +478,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Signalement impossible.");
+      throw new Error(apiFail(data, "Signalement impossible."));
     }
     return res.json();
   },
@@ -459,7 +490,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Réémission impossible.");
+      throw new Error(apiFail(data, "Réémission impossible."));
     }
     return res.json();
   },
@@ -507,7 +538,7 @@ export const api = {
     const res = await request(`/api/access-requests/${id}/approve/`, { method: "POST" });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Approbation impossible.");
+      throw new Error(apiFail(data, "Approbation impossible."));
     }
     return res.json();
   },
@@ -516,7 +547,7 @@ export const api = {
     const res = await request(`/api/access-requests/${id}/deny/`, { method: "POST" });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Refus impossible.");
+      throw new Error(apiFail(data, "Refus impossible."));
     }
     return res.json();
   },
@@ -525,7 +556,7 @@ export const api = {
     const res = await request(`/api/access-requests/${id}/revoke/`, { method: "POST" });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Révocation impossible.");
+      throw new Error(apiFail(data, "Révocation impossible."));
     }
     return res.json();
   },
@@ -537,7 +568,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Mise à jour impossible.");
+      throw new Error(apiFail(data, "Mise à jour impossible."));
     }
     const profile = mapPatient(await res.json());
     await persistPatient(profile);
@@ -564,7 +595,7 @@ export const api = {
       let detail = "Upload photo impossible.";
       try {
         const data = JSON.parse(result.body || "{}");
-        if (typeof data.detail === "string") detail = data.detail;
+        detail = apiFail(data, detail);
       } catch {
         /* ignore */
       }
@@ -591,7 +622,7 @@ export const api = {
         dossier: {},
       });
     if (user.photo_url) {
-      profile.photoUrl = user.photo_url;
+      profile.photoUrl = canonicalMediaUrl(user.photo_url);
       profile.photoRequired = false;
     }
     await persistPatient(profile);
@@ -622,7 +653,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Enregistrement KYC impossible.");
+      throw new Error(apiFail(data, "Enregistrement KYC impossible."));
     }
     return res.json();
   },
@@ -631,7 +662,7 @@ export const api = {
     const res = await request("/api/auth/kyc/me/submit/", { method: "POST" });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Envoi KYC impossible.");
+      throw new Error(apiFail(data, "Envoi KYC impossible."));
     }
     return res.json();
   },
@@ -654,7 +685,7 @@ export const api = {
       data = {};
     }
     if (result.status < 200 || result.status >= 300) {
-      throw new Error(data.detail || "Upload KYC impossible.");
+      throw new Error(apiFail(data, "Upload KYC impossible."));
     }
     return data;
   },
@@ -673,7 +704,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Mise à jour assurance impossible.");
+      throw new Error(apiFail(data, "Mise à jour assurance impossible."));
     }
     return res.json();
   },
@@ -683,7 +714,7 @@ export const api = {
     if (res.status === 404) return null;
     if (!res.ok && res.status !== 204) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Retrait assurance impossible.");
+      throw new Error(apiFail(data, "Retrait assurance impossible."));
     }
     return null;
   },
@@ -709,7 +740,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Réservation impossible.");
+      throw new Error(apiFail(data, "Réservation impossible."));
     }
     return res.json();
   },
@@ -721,7 +752,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Annulation impossible.");
+      throw new Error(apiFail(data, "Annulation impossible."));
     }
     return res.json();
   },
@@ -744,7 +775,7 @@ export const api = {
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Blocage impossible.");
+      throw new Error(apiFail(data, "Blocage impossible."));
     }
     return res.json();
   },
@@ -753,7 +784,7 @@ export const api = {
     const res = await request(`/api/access-blocks/${id}/lift/`, { method: "POST" });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || "Levée du blocage impossible.");
+      throw new Error(apiFail(data, "Levée du blocage impossible."));
     }
     return res.json();
   },
@@ -834,6 +865,9 @@ export type AccessRequestItem = {
   reason: string;
   expires_at: string | null;
   grant_expires_at?: string | null;
+  requested_duration_hours?: number | null;
+  duration_label?: string | null;
+  route?: string;
   has_active_grant: boolean;
 };
 

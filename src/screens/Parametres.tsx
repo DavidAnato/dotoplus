@@ -919,8 +919,9 @@ export default function Parametres({
             HORS LIGNE
           </Text>
           <Text style={{ color: colors.text, fontSize: 13, lineHeight: 19 }}>
-            Le mode urgence et la DotoCard utilisent le dernier snapshot synchronisé (profil,
-            allergies, contact, token QR). Les consentements d&apos;accès nécessitent une connexion.
+            Le mode urgence et la DotoCard utilisent les dernières informations enregistrées
+            sur cet appareil (profil, allergies, contact, code de la carte). Les autorisations
+            d&apos;accès nécessitent une connexion.
           </Text>
           <Text style={{ color: colors.muted, fontSize: 12, marginTop: 14 }}>Version 1.0</Text>
         </SettingsModal>

@@ -39,8 +39,12 @@ export function Avatar({
   const initials = initialsFrom(name, firstName, lastName);
   const radius = size / 2;
   const ringW = Math.max(1.5, size * 0.04);
+  const [broken, setBroken] = React.useState(false);
+  React.useEffect(() => {
+    setBroken(false);
+  }, [uri]);
 
-  if (uri) {
+  if (uri && !broken) {
     return (
       <View
         style={[
@@ -56,6 +60,7 @@ export function Avatar({
       >
         <Image
           source={{ uri }}
+          onError={() => setBroken(true)}
           style={{
             width: size,
             height: size,

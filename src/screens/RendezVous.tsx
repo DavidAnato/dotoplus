@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Button, Card, Header, SectionLabel } from "../ui";
 import { C, darkC } from "../theme";
 import { api } from "../api";
+import { labelStatut } from "../apiMessage";
 import {
   BrandBackground,
   EmptyState,
@@ -92,7 +93,7 @@ export default function RendezVous({ dark = false }: { dark?: boolean }) {
           ) : items.length === 0 ? (
             <EmptyState
               title="Aucun rendez-vous"
-              subtitle="Les RDV pris par votre structure apparaîtront ici en temps réel."
+              subtitle="Les rendez-vous pris par votre structure apparaîtront ici."
               dark={dark}
               icon="calendar-outline"
               companions={["time", "business"]}
@@ -137,7 +138,7 @@ export default function RendezVous({ dark = false }: { dark?: boolean }) {
                               marginTop: 8,
                             }}
                           >
-                            {a.statut_label || a.statut}
+                            {labelStatut(a.statut, a.statut_label)}
                           </Text>
                           {!cancelled && !done ? (
                             <View style={{ marginTop: 10, alignSelf: "flex-start" }}>

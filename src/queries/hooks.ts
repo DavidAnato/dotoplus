@@ -23,7 +23,7 @@ export function useMyCard(enabled = true) {
           });
         }
         return { card, offline: false as const };
-      } catch {
+      } catch (e: any) {
         const snap = await storage.getSnapshot();
         if (snap?.cardToken) {
           return {
@@ -37,7 +37,8 @@ export function useMyCard(enabled = true) {
             offline: true as const,
           };
         }
-        throw new Error("Impossible de charger la DotoCard");
+        if (e?.status === 404) return { card: null, offline: false as const };
+        throw e instanceof Error ? e : new Error("Impossible de charger la DotoCard");
       }
     },
   });
@@ -102,27 +103,23 @@ export function useMeQuery(enabled = false) {
 }
 
 export function useNotifications(enabled = true) {
-  const online = useAppStore((s) => s.online);
   return useQuery({
     queryKey: qk.notifications,
     enabled,
     queryFn: () => api.notifications(),
-    // Consentement critique : pas de cache long (persist RQ sinon masque les alertes)
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchInterval: online && enabled ? 4_000 : false,
+    // Pas de poll ici : le flux SSE invalide, le secours est dans usePatientSSE.
+    staleTime: 15_000,
+    refetchOnMount: true,
   });
 }
 
 export function useUnreadCount(enabled = true) {
-  const online = useAppStore((s) => s.online);
   return useQuery({
     queryKey: qk.unread,
     enabled,
     queryFn: () => api.unreadCount(),
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchInterval: online && enabled ? 4_000 : false,
+    staleTime: 15_000,
+    refetchOnMount: true,
   });
 }
 
@@ -132,9 +129,8 @@ export function usePendingAccessRequests(enabled = true) {
     queryKey: qk.accessPending,
     enabled: enabled && online,
     queryFn: () => api.accessRequests(true),
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchInterval: online ? 4_000 : false,
+    staleTime: 15_000,
+    refetchOnMount: true,
     networkMode: "online",
   });
 }
@@ -145,9 +141,8 @@ export function useActiveAccessGrants(enabled = true) {
     queryKey: qk.accessActive,
     enabled: enabled && online,
     queryFn: () => api.accessRequests(false, true),
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchInterval: online ? 8_000 : false,
+    staleTime: 15_000,
+    refetchOnMount: true,
     networkMode: "online",
   });
 }

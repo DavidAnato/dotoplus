@@ -10,11 +10,9 @@ import {
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
-import { C, DEMO_USER, brandNavy, darkC } from "../theme";
-import { api } from "../api";
+import { C, brandNavy, darkC } from "../theme";
 import { storage } from "../storage";
 import { logoutFully } from "../session";
-import { queryClient } from "../queries/queryClient";
 import { hapticLight } from "../motion";
 import { useAppStore } from "../store/appStore";
 import { usePendingAccessRequests, useUnreadCount } from "../queries/hooks";
@@ -79,7 +77,7 @@ function OfflineBanner() {
     >
       <Ionicons name="cloud-offline-outline" size={16} color={colors.amber} />
       <Text style={{ color: colors.amber, fontWeight: "700", fontSize: 12, flex: 1 }}>
-        Hors ligne - cache local, file d'actions rejouée à la reconnexion
+        Hors ligne — vos actions seront enregistrées au retour du réseau.
       </Text>
     </View>
   );
@@ -105,27 +103,7 @@ function AuthNavigator({ initialRoute }: { initialRoute: keyof AuthStackParamLis
       </AuthStack.Screen>
       <AuthStack.Screen name="Login">
         {() => (
-          <Login
-            dark={dark}
-            onLogin={enterMain}
-            onDemo={async () => {
-              try {
-                queryClient.clear();
-                await api.requestOtp(DEMO_USER.phone, "login");
-                const profile = await api.login(DEMO_USER.phone, "00000");
-                enterMain(profile);
-              } catch (e: any) {
-                console.warn("[dotoplus] demo login failed:", e?.message || e);
-                await storage.saveSnapshot({
-                  profile: DEMO_USER,
-                  cardToken: "DEMO-DOTOCARD-TOKEN-OFFLINE",
-                  cardId: null,
-                  syncedAt: new Date().toISOString(),
-                });
-                enterMain(DEMO_USER);
-              }
-            }}
-          />
+          <Login dark={dark} onLogin={enterMain} />
         )}
       </AuthStack.Screen>
     </AuthStack.Navigator>
@@ -149,6 +127,7 @@ function HomeTabScreen() {
         else if (key === "rdv") navigation.getParent()?.navigate("RendezVous");
         else if (key === "dossier" || key === "ordo") navigation.navigate("Dossier");
         else if (key === "notifications") navigation.navigate("Notifications");
+        else if (key === "parametres") navigation.navigate("Parametres");
       }}
     />
   );
@@ -187,13 +166,14 @@ function MainTabs() {
           borderTopWidth: 1,
           paddingBottom: tabBarPad,
           paddingTop: 6,
-          height: 52 + tabBarPad,
+          height: 68 + tabBarPad,
           elevation: 8,
           shadowColor: brandNavy,
           shadowOpacity: 0.06,
           shadowRadius: 8,
         },
-        tabBarLabelStyle: { fontSize: 10, fontWeight: "700" },
+        tabBarAllowFontScaling: false,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },
         tabBarIcon: ({ color, focused, size }) => {
           const map: Record<string, keyof typeof Ionicons.glyphMap> = {
             Home: focused ? "home" : "home-outline",

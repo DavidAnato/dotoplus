@@ -242,7 +242,7 @@ export default function Urgence({
                       letterSpacing: 0.3,
                     }}
                   >
-                    Snapshot hors ligne
+                    Données d'urgence enregistrées
                   </Text>
                 </View>
               ) : null}
@@ -419,7 +419,7 @@ export default function Urgence({
                 paddingHorizontal: 12,
               }}
             >
-              Infos critiques synchronisées - disponibles hors connexion via le dernier snapshot.
+              Informations essentielles enregistrées sur cet appareil, disponibles hors connexion.
             </Text>
           </StaggerItem>
         </ScrollView>

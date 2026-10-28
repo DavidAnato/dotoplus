@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { Card, Header, Pill, SectionLabel } from "../ui";
+import { labelStatut } from "../apiMessage";
 import { C, Profile, darkC } from "../theme";
 import {
   BrandBackground,
@@ -142,8 +143,8 @@ export default function Dossier({ user, dark = false }: { user: Profile; dark?: 
                   preset="dossier"
                   compact
                   dark={dark}
-                  title="Votre parcours de soins"
-                  subtitle="Consultations, chroniques et historique - toujours à portée de main."
+                  title="Vos consultations"
+                  subtitle="Date, médecin, lieu et synthèse de chaque visite."
                 />
               ) : null}
               {sub === "ordonnances" ? (
@@ -152,7 +153,7 @@ export default function Dossier({ user, dark = false }: { user: Profile; dark?: 
                   compact
                   dark={dark}
                   title="Ordonnances"
-                  subtitle="Médicaments prescrits par vos médecins."
+                  subtitle="Visibles si votre médecin les partage via une synthèse."
                 />
               ) : null}
               {sub === "examens" ? (
@@ -161,7 +162,7 @@ export default function Dossier({ user, dark = false }: { user: Profile; dark?: 
                   compact
                   dark={dark}
                   title="Examens & labo"
-                  subtitle="Résultats biologiques et imagerie."
+                  subtitle="Résultats partagés par votre médecin uniquement."
                 />
               ) : null}
               {sub === "assurance" ? (
@@ -201,6 +202,20 @@ export default function Dossier({ user, dark = false }: { user: Profile; dark?: 
   );
 }
 
+function formatVisitDate(iso?: string) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return String(iso).slice(0, 10);
+  return d.toLocaleString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function DossierTab({
   user,
   dark,
@@ -211,7 +226,7 @@ function DossierTab({
   consultations: any[];
 }) {
   const colors = dark ? darkC : C;
-  const [open, setOpen] = useState<number | null>(null);
+  const [open, setOpen] = useState<any | null>(null);
 
   return (
     <>
@@ -248,11 +263,11 @@ function DossierTab({
 
       <StaggerItem index={2}>
         <Card colors={colors}>
-          <SectionLabel>Historique des consultations</SectionLabel>
+          <SectionLabel>Vos consultations</SectionLabel>
           {consultations.length === 0 ? (
             <EmptyState
               title="Aucune consultation"
-              subtitle="Vos prochaines visites médicales apparaîtront ici."
+              subtitle="Les visites et synthèses de votre médecin apparaîtront ici."
               dark={dark}
               icon="medical-outline"
               companions={["business", "calendar"]}
@@ -261,68 +276,132 @@ function DossierTab({
             consultations.map((c, i) => (
               <PressScale
                 key={c.id || i}
-                onPress={() => setOpen(open === i ? null : i)}
-                style={{ flexDirection: "row", gap: 12, paddingVertical: 10 }}
+                onPress={() => setOpen(c)}
+                style={{
+                  flexDirection: "row",
+                  gap: 12,
+                  paddingVertical: 12,
+                  borderTopWidth: i === 0 ? 0 : 1,
+                  borderTopColor: colors.border,
+                }}
               >
-                <View
-                  style={{
-                    width: 12,
-                    height: 12,
-                    borderRadius: 6,
-                    backgroundColor: C.emerald,
-                    marginTop: 4,
-                  }}
-                />
+                <IconBadge name="medkit-outline" color={C.teal} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontWeight: "800", color: colors.text }}>
-                    {c.titre ||
-                      [c.specialite || "Consultation", c.medecin_nom, c.structure_nom]
-                        .filter(Boolean)
-                        .join(" - ") ||
-                      "Consultation"}
+                    {c.titre || c.specialite || c.type_label || "Consultation"}
                   </Text>
-                  <Text style={{ color: colors.muted, fontSize: 12 }}>
-                    {c.date ? new Date(c.date).toLocaleDateString("fr-FR") : "-"}
-                    {c.appointment_id ? " · Liée à un RDV" : ""}
+                  <Text style={{ color: colors.muted, fontSize: 12, marginTop: 2 }}>
+                    {formatVisitDate(c.date)}
+                    {c.motif ? ` · ${c.motif}` : ""}
                   </Text>
-                  <Text style={{ color: colors.muted, fontSize: 12 }}>
-                    {c.medecin_nom || ""}
+                  <Text style={{ color: C.teal, fontSize: 12, fontWeight: "800", marginTop: 6 }}>
+                    Voir le détail
                   </Text>
-                  <Text style={{ color: C.blue, fontSize: 12, marginTop: 2 }}>
-                    {c.diagnostic || c.type_label || "Consultation"}
-                  </Text>
-                  {open === i && c.notes ? (
-                    <View
-                      style={{
-                        backgroundColor: colors.lightBlue,
-                        borderRadius: 12,
-                        padding: 12,
-                        marginTop: 8,
-                      }}
-                    >
-                      <Text style={{ color: colors.text, fontSize: 12, lineHeight: 18 }}>
-                        {c.notes}
-                      </Text>
-                    </View>
-                  ) : null}
                 </View>
               </PressScale>
             ))
           )}
         </Card>
       </StaggerItem>
+
+      <Modal
+        visible={!!open}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOpen(null)}
+      >
+        <Pressable
+          onPress={() => setOpen(null)}
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(13,20,36,0.45)",
+            justifyContent: "flex-end",
+          }}
+        >
+          <Pressable
+            onPress={() => {}}
+            style={{
+              backgroundColor: colors.white,
+              borderTopLeftRadius: 22,
+              borderTopRightRadius: 22,
+              padding: 20,
+              paddingBottom: 32,
+              maxHeight: "80%",
+            }}
+          >
+            <View style={{ alignItems: "center", marginBottom: 12 }}>
+              <View
+                style={{
+                  width: 40,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: colors.border,
+                }}
+              />
+            </View>
+            <Text style={{ fontWeight: "800", fontSize: 18, color: colors.text }}>
+              {open?.type_label || open?.specialite || "Consultation"}
+            </Text>
+            <Text style={{ color: colors.muted, fontSize: 13, marginTop: 4 }}>
+              {formatVisitDate(open?.date)}
+            </Text>
+            <ScrollView style={{ marginTop: 16 }} showsVerticalScrollIndicator={false}>
+              {open?.medecin_nom ? (
+                <Text style={{ color: colors.text, fontSize: 14, marginBottom: 6 }}>
+                  <Text style={{ fontWeight: "800" }}>Médecin : </Text>
+                  {open.medecin_nom}
+                </Text>
+              ) : null}
+              {open?.structure_nom ? (
+                <Text style={{ color: colors.text, fontSize: 14, marginBottom: 6 }}>
+                  <Text style={{ fontWeight: "800" }}>Lieu : </Text>
+                  {open.structure_nom}
+                </Text>
+              ) : null}
+              {open?.specialite ? (
+                <Text style={{ color: colors.text, fontSize: 14, marginBottom: 6 }}>
+                  <Text style={{ fontWeight: "800" }}>Spécialité : </Text>
+                  {open.specialite}
+                </Text>
+              ) : null}
+              {open?.motif ? (
+                <Text style={{ color: colors.text, fontSize: 14, marginBottom: 6 }}>
+                  <Text style={{ fontWeight: "800" }}>Motif : </Text>
+                  {open.motif}
+                </Text>
+              ) : null}
+              <Text style={{ fontWeight: "800", color: colors.navy, marginTop: 10, marginBottom: 6 }}>
+                Synthèse
+              </Text>
+              <Text style={{ color: colors.text, fontSize: 15, lineHeight: 22 }}>
+                {open?.synthese ||
+                  "Votre médecin n'a pas encore rédigé de synthèse pour cette visite."}
+              </Text>
+            </ScrollView>
+            <PressScale
+              onPress={() => setOpen(null)}
+              style={{
+                marginTop: 18,
+                backgroundColor: C.navy,
+                borderRadius: 14,
+                paddingVertical: 14,
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "800" }}>Fermer</Text>
+            </PressScale>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </>
   );
 }
 
-function formatMedLine(m: any): string {
-  const poso =
-    m.unites_par_prise && m.frequence_par_jour
-      ? `${m.unites_par_prise} × ${m.frequence_par_jour}`
-      : m.frequence || "";
-  const duree = m.duree_jours
-    ? `${m.duree_jours} jour${Number(m.duree_jours) > 1 ? "s" : ""}`
-    : "";
+function RxLine({ m, text, muted, border }: { m: any; text: string; muted: string; border: string }) {
+  const forme = String(m.forme || "").trim();
+  const dosage = String(m.dosage || "").trim();
+  const nom = String(m.nom || "").trim();
+  const head = [nom, forme].filter(Boolean).join(", ") + (dosage ? ` — ${dosage}` : "");
   const momentMap: Record<string, string> = {
     a_jeun: "À jeun",
     avant_repas: "Avant les repas",
@@ -331,11 +410,32 @@ function formatMedLine(m: any): string {
     entre_repas: "Entre les repas",
     au_coucher: "Au coucher",
   };
-  const moment = momentMap[m.moment] || "";
-  return [m.nom, m.dosage, m.forme, m.quantite, poso, duree, moment, m.instructions]
-    .map((x) => (x == null ? "" : String(x).trim()))
-    .filter((x) => x && x !== "-")
-    .join(" - ");
+  const parts = [m.unites_par_prise, m.frequence_par_jour, momentMap[m.moment] || ""]
+    .map((x) => String(x || "").trim())
+    .filter((x) => x && x !== "-");
+  const posologie = parts.join(", ") || String(m.frequence || "").trim();
+  const days = Number(m.duree_jours);
+  const duree = days > 0 ? `${days} jour${days > 1 ? "s" : ""}` : "";
+  const quantite = String(m.quantite || "").trim();
+  const instructions = String(m.instructions || "").trim();
+  if (!head && !quantite) return null;
+  return (
+    <View style={{ marginTop: 10, paddingTop: 8, borderTopWidth: 1, borderTopColor: border }}>
+      <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <Text style={{ flex: 1, color: text, fontWeight: "800", fontSize: 14, lineHeight: 20 }}>{head}</Text>
+        {quantite ? <Text style={{ color: text, fontWeight: "800", fontSize: 14 }}>{quantite}</Text> : null}
+      </View>
+      {posologie ? (
+        <Text style={{ color: text, fontSize: 13, marginTop: 4, lineHeight: 18 }}>Posologie : {posologie}</Text>
+      ) : null}
+      {duree ? (
+        <Text style={{ color: text, fontSize: 13, marginTop: 2, lineHeight: 18 }}>Durée du traitement : {duree}</Text>
+      ) : null}
+      {instructions ? (
+        <Text style={{ color: muted, fontSize: 12, marginTop: 2, lineHeight: 17 }}>{instructions}</Text>
+      ) : null}
+    </View>
+  );
 }
 
 function Ordonnances({ dark, items }: { dark: boolean; items: any[] }) {
@@ -366,7 +466,7 @@ function Ordonnances({ dark, items }: { dark: boolean; items: any[] }) {
                     : "Ordonnance"}
                 </Text>
                 <Text style={{ color: colors.muted, fontSize: 12 }}>
-                  {[o.medecin_nom, o.structure_nom, o.statut_label || o.statut]
+                  {[o.medecin_nom, o.structure_nom, labelStatut(o.statut, o.statut_label)]
                     .filter(Boolean)
                     .join(" · ")}
                 </Text>
@@ -376,12 +476,13 @@ function Ordonnances({ dark, items }: { dark: boolean; items: any[] }) {
               </View>
             </View>
             {(o.medicaments || []).map((m: any) => (
-              <Text
+              <RxLine
                 key={m.id || m.nom}
-                style={{ color: colors.text, fontSize: 13, marginTop: 8, lineHeight: 19 }}
-              >
-                • {formatMedLine(m)}
-              </Text>
+                m={m}
+                text={colors.text}
+                muted={colors.muted}
+                border={colors.border}
+              />
             ))}
             {o.instructions ? (
               <Text style={{ color: colors.muted, fontSize: 12, marginTop: 8, lineHeight: 18 }}>
@@ -436,7 +537,7 @@ function Examens({
                     Bon #{b.id}
                   </Text>
                   <Pill color={C.green} bg={colors.lightBlue}>
-                    {b.statut_label || BON_LABELS[b.statut] || b.statut}
+                    {labelStatut(b.statut, b.statut_label || BON_LABELS[b.statut])}
                   </Pill>
                 </View>
                 <Text style={{ color: colors.muted, fontSize: 12, marginTop: 6 }}>
@@ -465,7 +566,7 @@ function Examens({
               <Text style={{ color: colors.muted, fontSize: 12, marginTop: 4 }}>
                 {x.laboratoire} ·{" "}
                 {x.date ? new Date(x.date).toLocaleDateString("fr-FR") : "-"} ·{" "}
-                {x.statut_label || x.statut}
+                {labelStatut(x.statut, x.statut_label)}
               </Text>
               {x.resultat_texte ? (
                 <Text style={{ color: colors.text, fontSize: 13, marginTop: 8 }}>

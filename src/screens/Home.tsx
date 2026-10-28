@@ -115,7 +115,7 @@ export default function Home({
                 {user.npi}
               </Text>
             </View>
-            <View style={{ position: "relative" }}>
+            <PressScale onPress={() => onNavigate?.("parametres")}>
               <Avatar
                 uri={user.photoUrl}
                 firstName={user.firstName}
@@ -125,7 +125,7 @@ export default function Home({
                 textColor="#fff"
                 style={{ borderWidth: 1.5, borderColor: "rgba(255,255,255,0.35)" }}
               />
-            </View>
+            </PressScale>
           </View>
 
           <CriticalHeroStrip user={user} />

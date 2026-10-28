@@ -3,13 +3,14 @@ import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Button, PhoneField, AuthScreenHeader } from "../ui";
-import { C, DEMO_USER, Profile, brandNavy, darkC, accent } from "../theme";
+import { C, Profile, brandNavy, darkC, accent } from "../theme";
 import { useScreenInsets } from "../safeArea";
 import { useLoginMutation, useRegisterMutation } from "../queries/hooks";
 import { api } from "../api";
 import { PressScale, ScreenEnter, StaggerItem } from "../motion";
 import { PinInput } from "../components/PinInput";
 import { IdCardScanField, IdCardOcrResult } from "../components/IdCardScanField";
+import { appAlert } from "../components/AppDialog";
 import { displayPhoneBj, isValidBjPhone, toE164Bj, nationalDigits } from "../phone";
 
 type Flow = "welcome" | "login" | "register";
@@ -97,13 +98,17 @@ function Surface({
   return <View>{children}</View>;
 }
 
+function publicOtpHint(hint: unknown): string {
+  const text = String(hint || "").trim();
+  if (!text || /00000|d[ée]mo|mdp123|1234/i.test(text)) return "Code envoyé par SMS.";
+  return text;
+}
+
 export default function Login({
   onLogin,
-  onDemo,
   dark = false,
 }: {
   onLogin: (p: Profile) => void;
-  onDemo?: () => void;
   dark?: boolean;
 }) {
   const colors = dark ? darkC : C;
@@ -169,8 +174,8 @@ export default function Login({
     setSendingOtp(true);
     try {
       const res = await api.requestOtp(fullPhone(), purpose);
-      setHint(res.hint || "Code envoyé par SMS.");
-      if (String(res.hint || "").includes("00000")) setOtp("00000");
+      setHint(publicOtpHint(res.hint));
+      setOtp("");
       if (purpose === "login") setLoginStep("otp");
       else setRegisterStep("otp");
     } catch (e: any) {
@@ -216,8 +221,7 @@ export default function Login({
     setVerifyingUi(true);
     setError("");
     try {
-      onLogin(
-        await registerMut.mutateAsync({
+      const profile = await registerMut.mutateAsync({
           phone: fullPhone(),
           otp: otpCode,
           npi: idCard.npi,
@@ -229,8 +233,10 @@ export default function Login({
           mother_name: idCard.mother_name || undefined,
           address_commune: idCard.address_commune || undefined,
           address_quartier: idCard.address_quartier || undefined,
-        })
-      );
+        });
+      const linked = (profile as Profile & { activationMessage?: string }).activationMessage;
+      if (linked) appAlert("Dossier relié", linked);
+      onLogin(profile);
     } catch (e: any) {
       setError(e.message || "Inscription impossible.");
       setOtp("");
@@ -243,8 +249,6 @@ export default function Login({
   const grad = dark
     ? ([colors.bg, "#121212", colors.white] as const)
     : (["#F4FBFC", "#F7FAFB", "#FFFFFF"] as const);
-
-  const startDemo = () => (onDemo ? onDemo() : onLogin(DEMO_USER));
 
   // --- Écran d’accueil : un choix, pas un formulaire ---
   if (flow === "welcome") {
@@ -287,17 +291,12 @@ export default function Login({
             </StaggerItem>
 
             <StaggerItem index={2}>
-              <PressScale onPress={startDemo} style={{ marginTop: 28, alignItems: "center" }}>
-                <Text style={{ color: colors.muted, fontSize: 13, fontWeight: "600" }}>
-                  Explorer en démo (hors ligne)
-                </Text>
-              </PressScale>
               <Text
                 style={{
                   textAlign: "center",
                   color: colors.grey,
                   fontSize: 12,
-                  marginTop: 18,
+                  marginTop: 28,
                   lineHeight: 16,
                 }}
               >

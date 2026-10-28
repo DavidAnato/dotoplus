@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { isRunningInExpoGo } from "expo";
 import { AppState, Platform } from "react-native";
 import { api } from "./api";
 import { storage } from "./storage";
@@ -8,8 +9,10 @@ import { qk } from "./queries/keys";
 import { playAccessRequestSound } from "./sounds";
 import { connectSse } from "./sse";
 
-const POLL_MS = 4_000;
-const DOSSIER_POLL_MS = 12_000;
+const POLL_MS = 20_000;
+const DOSSIER_POLL_MS = 45_000;
+const SSE_RETRY_MS = 5_000;
+const SSE_RETRY_MAX_MS = 30_000;
 
 const CONSENT_TYPES = new Set([
   "notification",
@@ -172,7 +175,10 @@ export function usePatientSSE(enabled: boolean) {
   useEffect(() => {
     if (!enabled || !online) return;
     let closed = false;
+    let sseOpen = false;
+    let retryDelay = SSE_RETRY_MS;
     let retry: ReturnType<typeof setTimeout> | undefined;
+    let pollArm: ReturnType<typeof setTimeout> | undefined;
     let poll: ReturnType<typeof setInterval> | undefined;
     let dossierPoll: ReturnType<typeof setInterval> | undefined;
     let appSub: { remove: () => void } | undefined;
@@ -224,8 +230,15 @@ export function usePatientSSE(enabled: boolean) {
       refreshAppointments(qc);
     };
 
+    const stopPoll = () => {
+      if (poll) clearInterval(poll);
+      if (dossierPoll) clearInterval(dossierPoll);
+      poll = undefined;
+      dossierPoll = undefined;
+    };
+
     const startPoll = () => {
-      if (poll) return;
+      if (poll || closed || sseOpen) return;
       tickConsent();
       poll = setInterval(tickConsent, POLL_MS);
       dossierPoll = setInterval(tickDossier, DOSSIER_POLL_MS);
@@ -236,16 +249,31 @@ export function usePatientSSE(enabled: boolean) {
       const access = await storage.getAccess();
       if (!access || closed) return;
       closeRef.current?.();
+      sseOpen = false;
       closeRef.current = connectSse(api.patientEventsUrl(access), handleEvent, {
+        onOpen: () => {
+          sseOpen = true;
+          retryDelay = SSE_RETRY_MS;
+          stopPoll();
+        },
         onError: () => {
+          const wasOpen = sseOpen;
+          sseOpen = false;
           closeRef.current = null;
-          if (!closed) retry = setTimeout(() => void connect(), 5000);
+          if (closed) return;
+          startPoll();
+          if (retry) clearTimeout(retry);
+          const wait = wasOpen ? SSE_RETRY_MS : retryDelay;
+          retry = setTimeout(() => void connect(), wait);
+          if (!wasOpen) retryDelay = Math.min(retryDelay * 2, SSE_RETRY_MAX_MS);
         },
       });
     };
 
-    startPoll();
     void connect();
+    pollArm = setTimeout(() => {
+      if (!closed && !sseOpen) startPoll();
+    }, 8_000);
 
     appSub = AppState.addEventListener("change", (state) => {
       if (state === "active") {
@@ -258,8 +286,8 @@ export function usePatientSSE(enabled: boolean) {
     return () => {
       closed = true;
       if (retry) clearTimeout(retry);
-      if (poll) clearInterval(poll);
-      if (dossierPoll) clearInterval(dossierPoll);
+      if (pollArm) clearTimeout(pollArm);
+      stopPoll();
       appSub?.remove();
       closeRef.current?.();
       closeRef.current = null;
@@ -267,13 +295,19 @@ export function usePatientSSE(enabled: boolean) {
   }, [enabled, online, qc, setUnread]);
 }
 
+/**
+ * SDK 53+ : le simple import d'expo-notifications exécute
+ * DevicePushTokenAutoRegistration, qui throw sur Expo Go Android
+ * (warnOfExpoGoPushUsage). Il faut sortir avant l'import.
+ */
+function expoGoAndroidPushRemoved(): boolean {
+  return Platform.OS === "android" && isRunningInExpoGo();
+}
+
 /** Enregistrement push Expo - no-op si module absent / simulateur / Expo Go Android. */
 export async function registerPushToken(app = "dotoplus"): Promise<string | null> {
   try {
-    // SDK 53+ : import d'expo-notifications plante sur Expo Go Android
-    // (PushTokenAutoRegistration.throw). Skip avant tout import.
-    const { isRunningInExpoGo } = await import("expo");
-    if (isRunningInExpoGo() && Platform.OS === "android") {
+    if (expoGoAndroidPushRemoved()) {
       console.log("[push] Expo Go Android - push distant désactivé (SDK 53+)");
       return null;
     }
@@ -335,6 +369,7 @@ export function subscribePushNavigation(
   };
   void (async () => {
     try {
+      if (expoGoAndroidPushRemoved()) return;
       const Notifications = await import("expo-notifications");
       const last = await Notifications.getLastNotificationResponseAsync();
       if (last?.notification?.request?.content?.data) {

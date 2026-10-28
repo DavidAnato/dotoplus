@@ -73,6 +73,11 @@ export function ConsentCard({
           </Text>
         </View>
       ) : null}
+      {req.duration_label || req.requested_duration_hours ? (
+        <Text style={{ color: colors.text, fontSize: 12, fontWeight: "700" }}>
+          Durée demandée : {req.duration_label || `${req.requested_duration_hours} h`}
+        </Text>
+      ) : null}
       {req.expires_at ? (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Ionicons name="time-outline" size={14} color={brandBlue} />

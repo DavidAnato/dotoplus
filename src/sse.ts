@@ -44,14 +44,23 @@ export function connectSse(
   let offset = 0;
   let buf = "";
   let opened = false;
+  let failed = false;
+  const fail = () => {
+    if (failed) return;
+    failed = true;
+    opts?.onError?.();
+  };
   xhr.open("GET", url);
   xhr.setRequestHeader("Accept", "text/event-stream");
   xhr.setRequestHeader("Cache-Control", "no-cache");
   xhr.onreadystatechange = () => {
-    if (!opened && xhr.readyState >= XMLHttpRequest.HEADERS_RECEIVED && xhr.status === 200) {
+    if (xhr.readyState < XMLHttpRequest.HEADERS_RECEIVED || opened || failed) return;
+    if (xhr.status === 200) {
       opened = true;
       opts?.onOpen?.();
+      return;
     }
+    if (xhr.status >= 400) fail();
   };
   xhr.onprogress = () => {
     const text = xhr.responseText || "";
@@ -62,8 +71,11 @@ export function connectSse(
     buf = parts.pop() || "";
     for (const block of parts) parseSseBlock(block, onEvent);
   };
-  xhr.onerror = () => opts?.onError?.();
-  xhr.onload = () => opts?.onError?.();
+  xhr.onerror = () => fail();
+  xhr.onload = () => fail();
   xhr.send();
-  return () => xhr.abort();
+  return () => {
+    failed = true;
+    xhr.abort();
+  };
 }

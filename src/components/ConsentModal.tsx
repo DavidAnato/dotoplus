@@ -212,6 +212,12 @@ export function ConsentModal({
             </View>
           ) : null}
 
+          {req.duration_label || req.requested_duration_hours ? (
+            <Text style={{ color: colors.text, fontSize: 13, fontWeight: "700" }}>
+              Durée demandée : {req.duration_label || `${req.requested_duration_hours} h`}
+            </Text>
+          ) : null}
+
           <View style={styles.metaRow}>
             <Ionicons name="time-outline" size={15} color={brandBlue} />
             <Text style={{ color: colors.text, fontSize: 13, fontWeight: "700", flex: 1 }}>

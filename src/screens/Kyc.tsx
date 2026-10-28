@@ -54,7 +54,7 @@ function userStatus(statut?: string, motif?: string) {
     color: "#1E3755",
     bg: "#E4EEF4",
     title: "Pas encore envoyé",
-    detail: "Ajoutez votre pièce d'identité, un selfie et vos informations, puis envoyez le dossier.",
+    detail: "Scannez votre carte d'identité pour vérifier votre compte.",
   };
 }
 
@@ -207,37 +207,8 @@ export default function KycScreen({
           <Field label="Lieu de naissance" value={lieu} onChangeText={setLieu} colors={colors} disabled={locked} />
           <PhoneField label="Téléphone" value={tel} onChangeText={setTel} colors={colors} disabled={locked} />
 
-          {(["verso", "selfie"] as const).map((kind) => {
-            const url = kind === "verso" ? kyc?.piece_verso_url : kyc?.selfie_url;
-            const label = kind === "verso" ? "Pièce d'identité (verso)" : "Selfie / preuve de vie";
-            return (
-              <Pressable
-                key={kind}
-                onPress={() => !locked && void upload(kind)}
-                style={{
-                  borderWidth: 1.5,
-                  borderStyle: "dashed",
-                  borderColor: colors.border,
-                  borderRadius: 14,
-                  padding: 14,
-                  backgroundColor: colors.white,
-                }}
-              >
-                <Text style={{ fontWeight: "800", color: colors.text, marginBottom: 8 }}>{label}</Text>
-                {url ? (
-                  <Image source={{ uri: url }} style={{ width: "100%", height: 140, borderRadius: 10 }} />
-                ) : (
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                    <Ionicons name="camera-outline" size={22} color={C.green} />
-                    <Text style={{ color: colors.muted }}>Ajouter une photo</Text>
-                  </View>
-                )}
-              </Pressable>
-            );
-          })}
-
           {!locked ? (
-            <Button title="Envoyer pour validation" loading={busy} color={dark ? accent : brandNavy} onPress={() => void submit()} />
+            <Button title="Valider mon identité" loading={busy} color={dark ? accent : brandNavy} onPress={() => void submit()} />
           ) : kyc?.statut === "en_attente" ? (
             <Text style={{ color: colors.muted, textAlign: "center" }}>
               Votre dossier est en cours de vérification.
